@@ -22,7 +22,6 @@ export function Footer({ s, logoSrc }: { s: Settings; logoSrc: string | null }) 
         <div className="mt-20 grid gap-14 md:grid-cols-12">
           <div className="md:col-span-4">
             <Wordmark light logoSrc={logoSrc} name={b.name} />
-            <p className="mt-5 max-w-xs text-ivory/75">{b.name}</p>
             <Link href="/booking" className="btn btn-light mt-8">Book Your Vibe</Link>
           </div>
 

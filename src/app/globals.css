@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ivory: #faf3ea;
-  --color-beige: #eadbc8;
-  --color-sand: #f3e7d7;
+  --color-ivory: #ffffff;
+  --color-beige: #ece3f4;
+  --color-sand: #f6f1fa;
   --color-lavender: #c4aed0;
   --color-lilac: #e6dbec;
   --color-mauve: #a77b9e;
@@ -101,3 +101,13 @@ details[open] .plus { transform: rotate(45deg); }
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
   .marquee-track, .spin-slow, .float-y, .blob { animation: none !important; }
 }
+
+/* Intro splash (home, first visit per session) */
+.splash-cover { display: none; }
+html[data-splash="on"] .splash-cover { display: flex; animation: splash-failsafe .01s 6s forwards; }
+html[data-splash="on"] #site-logo { opacity: 0; animation: logo-failsafe .01s 6s forwards; }
+@keyframes splash-failsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+@keyframes logo-failsafe { to { opacity: 1; } }
+@keyframes splash-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.splash-in { animation: splash-in 1s cubic-bezier(.16,1,.3,1) both; }
+@media (prefers-reduced-motion: reduce) { .splash-cover { display: none !important; } html[data-splash="on"] #site-logo { opacity: 1; } }

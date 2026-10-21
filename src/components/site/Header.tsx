@@ -7,13 +7,17 @@ import { PAGES, PRIMARY } from "@/lib/nav";
 import { cn } from "@/lib/cn";
 import { Magnetic } from "./motion";
 
-export function Wordmark({ logoSrc, name, light }: { logoSrc?: string | null; name: string; light?: boolean }) {
+export function Wordmark({ logoSrc, name, light, id }: { logoSrc?: string | null; name: string; light?: boolean; id?: string }) {
   if (logoSrc) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={logoSrc} alt={name} className="h-10 w-auto" />;
+    return <img id={id} src={logoSrc} alt={name} className="h-12 w-auto" />;
   }
+  // Full-name lockup: script "Studio V" with the legal name beneath it.
   return (
-    <span className={cn("f-script whitespace-nowrap text-[3rem] leading-[1.2] pt-3 pb-1 pr-2 inline-block", light ? "text-ivory" : "text-[#3a0f35]")}>Studio V</span>
+    <span id={id} role="img" aria-label="Studio V Arts Wellness & Learning Inc" className={cn("inline-flex flex-col items-start whitespace-nowrap leading-none", light ? "text-white" : "text-[#3a0f35]")}>
+      <span aria-hidden className="f-script block pr-3 pt-1 text-[2.9rem] leading-[1.1]">Studio V</span>
+      <span aria-hidden className="f-serif -mt-1.5 block text-[0.56rem] font-semibold uppercase tracking-[0.24em] opacity-90">Arts Wellness &amp; Learning Inc</span>
+    </span>
   );
 }
 
@@ -44,10 +48,10 @@ export function Header({ logoSrc, name }: { logoSrc: string | null; name: string
   const primary = PAGES.filter((p) => PRIMARY.includes(p.href));
   return (
     <>
-      <header className={cn("fixed inset-x-0 top-0 z-50 transition-all duration-500", open ? "border-b border-transparent py-3" : scrolled ? "bg-[#f8efe3]/90 backdrop-blur-md border-b border-[#3a0f35]/15 py-1" : "border-b border-[#3a0f35]/25 py-3")}>
+      <header className={cn("fixed inset-x-0 top-0 z-50 transition-all duration-500", open ? "border-b border-transparent py-3" : scrolled ? "bg-white/90 backdrop-blur-md border-b border-[#3a0f35]/15 py-2.5" : "border-b border-[#3a0f35]/25 py-3")}>
         <div className="flex w-full items-center justify-between px-5 sm:px-12 lg:px-[5.2rem]">
           <Link href="/" aria-label={`${name} home`} className="rounded-full">
-            <Wordmark logoSrc={logoSrc} name={name} light={open} />
+            <Wordmark id="site-logo" logoSrc={logoSrc} name={name} light={open} />
           </Link>
           <nav aria-label="Main" className="hidden lg:block">
             <ul className="flex items-center gap-14">
@@ -62,7 +66,7 @@ export function Header({ logoSrc, name }: { logoSrc: string | null; name: string
           </nav>
           <div className="flex items-center gap-3">
             <span className="hidden sm:inline-block"><Magnetic>
-              <Link href="/booking" className="btn f-serif group !gap-3 !bg-[#3a0f35] !px-7 !text-[1.1rem] !text-[#faf1e6]">Book Your Vibe<svg aria-hidden width="20" height="12" viewBox="0 0 22 14" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M0 7h20M14 1l6 6-6 6" /></svg></Link>
+              <Link href="/booking" className="btn f-serif group !gap-3 !bg-[#3a0f35] !px-7 !text-[1.1rem] !text-white">Book Your Vibe<svg aria-hidden width="20" height="12" viewBox="0 0 22 14" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M0 7h20M14 1l6 6-6 6" /></svg></Link>
             </Magnetic></span>
             <span className={cn("sm:hidden", open && "invisible")}><Link href="/booking" className="btn btn-primary !min-h-11 !px-4 !py-2 text-sm whitespace-nowrap">Book Your Vibe</Link></span>
             <button

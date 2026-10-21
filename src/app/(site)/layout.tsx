@@ -5,6 +5,7 @@ import { CursorGlow, ScrollProgress } from "@/components/site/motion";
 import { getSettings } from "@/lib/settings";
 import { mediaSrc } from "@/lib/media";
 import { ClientMotion } from "@/components/site/ClientMotion";
+import { IntroSplash } from "@/components/site/IntroSplash";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   return (
     <ClientMotion>
       <a href="#main" className="skip">Skip to content</a>
+      <IntroSplash name={s.business.name} logoSrc={logo} tagline={s.business.tagline} />
       <ScrollProgress />
       <CursorGlow />
       <Header logoSrc={logo} name={s.business.shortName} />

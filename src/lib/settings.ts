@@ -46,7 +46,7 @@ const day = (enabled: boolean, open = "09:00", close = "21:00"): DayHours => ({ 
 
 export const DEFAULT_SETTINGS: Settings = {
   business: {
-    name: "STUDIO V Arts, Wellness & Learning Inc",
+    name: "Studio V Arts Wellness & Learning Inc",
     shortName: "Studio V",
     tagline: "Own Your Vibe",
     supportingLine: "Your Space. Your Passion. Your Vibe.",
