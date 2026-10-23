@@ -12,11 +12,11 @@ export function Wordmark({ logoSrc, name, light, id }: { logoSrc?: string | null
     // eslint-disable-next-line @next/next/no-img-element
     return <img id={id} src={logoSrc} alt={name} className="h-12 w-auto" />;
   }
-  // Full-name lockup: script "Studio V" with the legal name beneath it.
+  // Full-name lockup: script "Studio VM" with the legal name beneath it.
   return (
-    <span id={id} role="img" aria-label="Studio V Arts Wellness & Learning Inc" className={cn("inline-flex flex-col items-start whitespace-nowrap leading-none", light ? "text-white" : "text-[#3a0f35]")}>
-      <span aria-hidden className="f-script block pr-3 pt-1 text-[2.9rem] leading-[1.1]">Studio V</span>
-      <span aria-hidden className="f-serif -mt-1.5 block text-[0.56rem] font-semibold uppercase tracking-[0.24em] opacity-90">Arts Wellness &amp; Learning Inc</span>
+    <span id={id} role="img" aria-label="Studio VM Arts, Wellness & Learning Centre Inc." className={cn("inline-flex flex-col items-start whitespace-nowrap leading-none", light ? "text-white" : "text-[#3a0f35]")}>
+      <span aria-hidden className="f-script block pr-3 pt-1 text-[2.9rem] leading-[1.1]">Studio VM</span>
+      <span aria-hidden className="f-serif -mt-1.5 block text-[0.5rem] font-semibold uppercase tracking-[0.18em] opacity-90">Arts, Wellness &amp; Learning Centre Inc.</span>
     </span>
   );
 }
@@ -68,7 +68,7 @@ export function Header({ logoSrc, name }: { logoSrc: string | null; name: string
             <span className="hidden sm:inline-block"><Magnetic>
               <Link href="/booking" className="btn f-serif group !gap-3 !bg-[#3a0f35] !px-7 !text-[1.1rem] !text-white">Book Your Vibe<svg aria-hidden width="20" height="12" viewBox="0 0 22 14" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M0 7h20M14 1l6 6-6 6" /></svg></Link>
             </Magnetic></span>
-            <span className={cn("sm:hidden", open && "invisible")}><Link href="/booking" className="btn btn-primary !min-h-11 !px-4 !py-2 text-sm whitespace-nowrap">Book Your Vibe</Link></span>
+            <span className={cn("hidden min-[480px]:inline sm:hidden", open && "invisible")}><Link href="/booking" className="btn btn-primary !min-h-11 !px-4 !py-2 text-sm whitespace-nowrap">Book Your Vibe</Link></span>
             <button
               ref={btn}
               type="button"

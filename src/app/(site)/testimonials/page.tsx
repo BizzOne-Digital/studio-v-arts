@@ -5,7 +5,7 @@ import { getTestimonials } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Testimonials",
-  description: "What the Studio V community says about their time in the studio.",
+  description: "What the Studio VM community says about their time in the studio.",
 };
 
 export default async function Testimonials() {

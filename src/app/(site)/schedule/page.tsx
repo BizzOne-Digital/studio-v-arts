@@ -10,7 +10,7 @@ import { cn } from "@/lib/cn";
 
 export const metadata: Metadata = {
   title: "Class Schedule",
-  description: "Upcoming classes and workshops at Studio V, with times, instructors, seats left and prices.",
+  description: "Upcoming classes and workshops at Studio VM, with times, instructors, seats left and prices.",
 };
 
 export default async function Schedule({ searchParams }: { searchParams: Promise<{ cat?: string }> }) {

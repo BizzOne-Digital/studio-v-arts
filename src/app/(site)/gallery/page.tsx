@@ -5,7 +5,7 @@ import { getGallery } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Gallery",
-  description: "A look inside Studio V: movement, creativity, learning and celebration.",
+  description: "A look inside Studio VM: movement, creativity, learning and celebration.",
 };
 
 export default async function Gallery() {

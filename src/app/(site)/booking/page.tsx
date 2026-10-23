@@ -8,7 +8,7 @@ import { dateStrIn } from "@/lib/time";
 
 export const metadata: Metadata = {
   title: "Book a Class or the Studio",
-  description: "Request a seat in a Studio V class, or reserve the studio by the hour. Clear pricing, live availability, no payment taken online.",
+  description: "Request a seat in a Studio VM class, or reserve the studio by the hour. Clear pricing, live availability, no payment taken online.",
 };
 
 export default async function Booking({ searchParams }: { searchParams: Promise<{ type?: string; session?: string; service?: string }> }) {

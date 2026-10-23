@@ -15,8 +15,8 @@ import { fmtDate, fmtTime } from "@/lib/time";
 import { offerTerms } from "@/lib/pricing";
 
 export const metadata: Metadata = {
-  title: { absolute: "Studio V | Own Your Vibe: dance, yoga, creative classes and studio rental" },
-  description: "Studio V brings movement, creativity, learning and celebration under one roof. Book a class or rent a flexible 600 sq ft studio.",
+  title: { absolute: "Studio VM | Own Your Vibe: dance, yoga, creative classes and studio rental" },
+  description: "Studio VM brings movement, creativity, learning and celebration under one roof. Book a class or rent a flexible 600 sq ft studio.",
 };
 
 const TONE = { move: "move", create: "create", learn: "learn", connect: "connect", rental: "rental" } as const;
@@ -39,7 +39,7 @@ export default async function Home() {
       <OrgJsonLd s={s} />
       <Hero heroSub={s.copy.heroSub} />
 
-      <section aria-label="What happens at Studio V" className="on-dark grain relative overflow-hidden bg-plum py-8 text-ivory">
+      <section aria-label="What happens at Studio VM" className="on-dark grain relative overflow-hidden bg-plum py-8 text-ivory">
         <Marquee items={["Dance", "Yoga", "Painting", "Chess", "Zumba", "Workshops", "Celebrations", "Community"]} />
       </section>
 
@@ -47,7 +47,7 @@ export default async function Home() {
       <section id="intro" className="relative mx-auto overflow-x-clip max-w-[88rem] px-5 py-28 sm:px-8 sm:py-40">
         <div className="grid items-center gap-16 lg:grid-cols-12">
           <div className="lg:col-span-6 lg:pr-10">
-            <SectionHead eyebrow="Welcome to Studio V" title={s.copy.introHeading} italic={["belong."]} />
+            <SectionHead eyebrow="Welcome to Studio VM" title={s.copy.introHeading} italic={["belong."]} />
             <Reveal delay={0.2}><p className="mt-8 max-w-xl text-lg text-ink/80">{s.copy.introBody}</p></Reveal>
             <Reveal delay={0.3}><p className="hand mt-8 text-4xl text-mauve-deep">{s.business.supportingLine}</p></Reveal>
             <Reveal delay={0.4} className="mt-8"><Link href="/about" className="ulink font-semibold text-plum">Our story &rarr;</Link></Reveal>

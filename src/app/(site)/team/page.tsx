@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 
 export const metadata: Metadata = {
   title: "Our Team",
-  description: "Meet the instructors and people who bring Studio V to life.",
+  description: "Meet the instructors and people who bring Studio VM to life.",
 };
 
 export default async function Team() {

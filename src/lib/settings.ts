@@ -46,8 +46,8 @@ const day = (enabled: boolean, open = "09:00", close = "21:00"): DayHours => ({ 
 
 export const DEFAULT_SETTINGS: Settings = {
   business: {
-    name: "Studio V Arts Wellness & Learning Inc",
-    shortName: "Studio V",
+    name: "Studio VM Arts, Wellness & Learning Centre Inc.",
+    shortName: "Studio VM",
     tagline: "Own Your Vibe",
     supportingLine: "Your Space. Your Passion. Your Vibe.",
     email: "YourstudioV@gmail.com",
@@ -64,7 +64,7 @@ export const DEFAULT_SETTINGS: Settings = {
     heroSub: "Move, create, connect. Discover a welcoming space to explore what makes you, you.",
     introHeading: "One room. Endless ways to belong.",
     introBody:
-      "Studio V brings creativity, wellness, learning and celebration together under one roof. Come to explore an interest, build confidence, meet your neighbours and make memories worth keeping.",
+      "Studio VM brings creativity, wellness, learning and celebration together under one roof. Come to explore an interest, build confidence, meet your neighbours and make memories worth keeping.",
     rentalHeading: "A 600 sq ft room that becomes yours.",
     rentalBody:
       "Hire the studio for your own class, workshop or small gathering. Approximately 600 sq ft of flexible, light-filled space, booked by the hour.",

@@ -12,9 +12,9 @@ const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat", display: 
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: "Studio V | Own Your Vibe", template: "%s | Studio V" },
+  title: { default: "Studio VM | Own Your Vibe", template: "%s | Studio VM" },
   description: "Dance, yoga, creative workshops, learning and small celebrations. Book a class or rent the studio.",
-  openGraph: { siteName: "Studio V Arts Wellness & Learning Inc", type: "website", locale: "en_CA", images: [{ url: "/hero.webp", width: 2000, height: 1125, alt: "Studio V" }] },
+  openGraph: { siteName: "Studio VM Arts, Wellness & Learning Centre Inc.", type: "website", locale: "en_CA", images: [{ url: "/hero.webp", width: 2000, height: 1125, alt: "Studio VM" }] },
 };
 export const viewport: Viewport = { themeColor: "#ffffff", width: "device-width", initialScale: 1 };
 

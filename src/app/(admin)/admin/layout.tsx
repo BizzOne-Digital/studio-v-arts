@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: { default: "Studio V Admin", template: "%s | Studio V Admin" },
+  title: { default: "Studio VM Admin", template: "%s | Studio VM Admin" },
   robots: { index: false, follow: false, nocache: true },
 };
 export const dynamic = "force-dynamic";

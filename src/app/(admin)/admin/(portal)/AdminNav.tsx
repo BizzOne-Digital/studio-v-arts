@@ -27,7 +27,7 @@ export function AdminNav({ items, badges, email, logout }: { items: Item[]; badg
   const panel = (
     <div ref={first} className="flex h-full flex-col overflow-y-auto">
       <div className="hidden p-5 lg:block">
-        <Link href="/admin" className="display text-2xl">Studio V <span className="font-sans text-sm text-lavender">admin</span></Link>
+        <Link href="/admin" className="display text-2xl">Studio VM <span className="font-sans text-sm text-lavender">admin</span></Link>
         <Link href="/" target="_blank" className="mt-2 block text-sm text-lavender underline">View website</Link>
       </div>
       <div className="flex items-center justify-between p-5 lg:hidden">
@@ -47,7 +47,7 @@ export function AdminNav({ items, badges, email, logout }: { items: Item[]; badg
     <>
       {/* phone top bar */}
       <div className="sticky top-0 z-30 flex items-center justify-between bg-plum-deep px-4 py-2.5 text-ivory lg:hidden">
-        <Link href="/admin" className="display text-xl">Studio V <span className="font-sans text-xs text-lavender">admin</span></Link>
+        <Link href="/admin" className="display text-xl">Studio VM <span className="font-sans text-xs text-lavender">admin</span></Link>
         <button ref={toggle} type="button" onClick={() => setOpen(true)} aria-expanded={open} aria-controls="admin-drawer" aria-label="Open menu" className="grid h-11 w-11 place-items-center rounded-full border border-lavender/40">
           <span aria-hidden className="block h-3.5 w-5 border-y-2 border-current" />
         </button>

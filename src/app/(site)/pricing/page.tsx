@@ -9,7 +9,7 @@ import { getSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Pricing & Offers",
-  description: "Class prices, studio rental rates and current offers at Studio V, in Canadian dollars, with clear terms.",
+  description: "Class prices, studio rental rates and current offers at Studio VM, in Canadian dollars, with clear terms.",
 };
 
 export default async function Pricing() {

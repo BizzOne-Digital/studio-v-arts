@@ -15,10 +15,13 @@ export function IntroSplash({ name, logoSrc, tagline }: { name: string; logoSrc:
   const reduce = useReducedMotion();
   const [phase, setPhase] = useState<"show" | "move" | "done">("show");
   const [move, setMove] = useState<Move>({ x: 0, y: 0 });
+  const [base, setBase] = useState(1.2); // scale of the big logo; fitted to the screen width on mount
 
   useEffect(() => {
     const root = document.documentElement;
     if (root.dataset.splash !== "on") { setPhase("done"); return; }
+    const natural = document.getElementById("splash-logo")?.offsetWidth || 280;
+    setBase(Math.min(2.4, (window.innerWidth - 48) / natural));
     let t1: ReturnType<typeof setTimeout>;
     const go = () => {
       const target = document.getElementById("site-logo")?.getBoundingClientRect();
@@ -61,8 +64,8 @@ export function IntroSplash({ name, logoSrc, tagline }: { name: string; logoSrc:
       <div className="relative flex flex-col items-center">
         <motion.div
           id="splash-logo"
-          style={{ scale: 2.4 }}
-          animate={moving ? { x: move.x, y: move.y, scale: 1 } : { x: 0, y: 0, scale: 2.4 }}
+          style={{ scale: base }}
+          animate={moving ? { x: move.x, y: move.y, scale: 1 } : { x: 0, y: 0, scale: base }}
           transition={{ duration: reduce ? 0.01 : 1.05, ease: [0.76, 0, 0.24, 1] }}
           onAnimationComplete={() => { if (moving) finish(); }}
         >

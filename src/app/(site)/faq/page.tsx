@@ -5,7 +5,7 @@ import { getFaqs } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "FAQ",
-  description: "Answers to common questions about booking classes and renting the studio at Studio V.",
+  description: "Answers to common questions about booking classes and renting the studio at Studio VM.",
 };
 
 export default async function Faq() {

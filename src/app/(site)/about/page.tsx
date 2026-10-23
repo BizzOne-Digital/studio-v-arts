@@ -10,8 +10,8 @@ import { getGallery, getTeam, getTestimonials } from "@/lib/content";
 import { getSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
-  title: "About Studio V",
-  description: "The story behind Studio V: a welcoming community space where creativity, wellness, learning and celebration come together.",
+  title: "About Studio VM",
+  description: "The story behind Studio VM: a welcoming community space where creativity, wellness, learning and celebration come together.",
 };
 
 const VALUES = [
@@ -27,7 +27,7 @@ export default async function About() {
   const g = (n: number) => gallery[n];
   return (
     <>
-      <PageHero eyebrow="About Studio V" title="Where creativity meets community." italic={["community."]} body={s.copy.introBody} tone="about" photo={0}>
+      <PageHero eyebrow="About Studio VM" title="Where creativity meets community." italic={["community."]} body={s.copy.introBody} tone="about" photo={0}>
         <Link href="/booking" className="btn btn-primary">Book Your Vibe</Link>
         <Link href="/experiences" className="btn btn-ghost">Explore Experiences</Link>
       </PageHero>
@@ -51,7 +51,7 @@ export default async function About() {
             <SplitText text="One room with room for everyone." italicWords={["everyone."]} className="display mt-4 text-[clamp(2rem,4.2vw,3.5rem)]" />
             <div className="mt-8 space-y-6 text-lg text-ink/80">
               <Reveal><p className="first-letter:float-left first-letter:mr-3 first-letter:font-[family-name:var(--font-playfair)] first-letter:text-7xl first-letter:leading-[0.8] first-letter:text-plum">
-                Studio V brings creativity, wellness, learning and celebration together under one roof. It is a welcoming space to explore your interests, build confidence, meet people and make memories.
+                Studio VM brings creativity, wellness, learning and celebration together under one roof. It is a welcoming space to explore your interests, build confidence, meet people and make memories.
               </p></Reveal>
               <Reveal delay={0.1}><p>Dancers and chess players, painters and parents, children, seniors and curious beginners all share the same floor. Some come for a class. Some hire the space for their own. Many come for both.</p></Reveal>
             </div>
@@ -99,7 +99,7 @@ export default async function About() {
       <section className="bg-sand py-24">
         <div className="mx-auto max-w-[88rem] px-5 sm:px-8">
           <div className="mb-12 flex flex-wrap items-end justify-between gap-4">
-            <SectionHead eyebrow="Inside Studio V" title="The space." italic={["space."]} />
+            <SectionHead eyebrow="Inside Studio VM" title="The space." italic={["space."]} />
             <Link href="/gallery" className="ulink font-semibold text-plum">Full gallery &rarr;</Link>
           </div>
           <GalleryGrid items={gallery.length ? gallery : PLACEHOLDER_TILES} limit={6} />

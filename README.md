@@ -1,4 +1,4 @@
-# Studio V website and admin
+# Studio VM website and admin
 
 Next.js 16, TypeScript, Tailwind v4, Motion, MongoDB Atlas. 12 public pages and a private admin portal at `/admin`.
 

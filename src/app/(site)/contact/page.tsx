@@ -8,7 +8,7 @@ import { addressLine, getSettings, hasAddress, mapLinks } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Get in touch with Studio V by form, email or phone. Find our details, hours and directions.",
+  description: "Get in touch with Studio VM by form, email or phone. Find our details, hours and directions.",
 };
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];

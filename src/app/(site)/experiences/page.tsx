@@ -6,7 +6,7 @@ import { CATEGORY_KEYS, type Category } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Experiences",
-  description: "Dance, yoga, Zumba, fitness, painting, chess, workshops, celebrations and studio rental. Explore everything on offer at Studio V.",
+  description: "Dance, yoga, Zumba, fitness, painting, chess, workshops, celebrations and studio rental. Explore everything on offer at Studio VM.",
 };
 
 export default async function Experiences({ searchParams }: { searchParams: Promise<{ cat?: string }> }) {
@@ -20,7 +20,7 @@ export default async function Experiences({ searchParams }: { searchParams: Prom
         eyebrow="Experiences"
         title="Move. Create. Learn. Celebrate."
         italic={["Celebrate."]}
-        body="Five ways to spend your time at Studio V. Open any experience for details, then request your spot."
+        body="Five ways to spend your time at Studio VM. Open any experience for details, then request your spot."
         tone="move" photo={1}
       />
       <section className="mx-auto max-w-[88rem] px-5 pb-28 sm:px-8">

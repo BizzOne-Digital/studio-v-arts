@@ -7,7 +7,7 @@ import { getSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Studio Rental",
-  description: "Hire Studio V by the hour: an approximately 600 sq ft room for your own class, workshop or small gathering.",
+  description: "Hire Studio VM by the hour: an approximately 600 sq ft room for your own class, workshop or small gathering.",
 };
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
