@@ -3,7 +3,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { PAGES, PRIMARY } from "@/lib/nav";
+import { MOBILE_MENU, PAGES, PRIMARY } from "@/lib/nav";
+import { InstagramCta } from "./Instagram";
 import { cn } from "@/lib/cn";
 import { Magnetic } from "./motion";
 
@@ -21,7 +22,7 @@ export function Wordmark({ logoSrc, name, light, id }: { logoSrc?: string | null
   );
 }
 
-export function Header({ logoSrc, name }: { logoSrc: string | null; name: string }) {
+export function Header({ logoSrc, name, instagram }: { logoSrc: string | null; name: string; instagram?: string | null }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -29,7 +30,8 @@ export function Header({ logoSrc, name }: { logoSrc: string | null; name: string
   const btn = useRef<HTMLButtonElement>(null);
   const firstLink = useRef<HTMLAnchorElement>(null);
 
-  useEffect(() => setOpen(false), [path]);
+  const [seenPath, setSeenPath] = useState(path);
+  if (seenPath !== path) { setSeenPath(path); setOpen(false); }
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 24);
     on();
@@ -100,18 +102,28 @@ export function Header({ logoSrc, name }: { logoSrc: string | null; name: string
             exit={reduce ? { opacity: 0 } : { clipPath: "circle(0% at calc(100% - 2.5rem) 2.5rem)" }}
             transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
           >
-            <nav aria-label="Mobile" className="mx-auto flex min-h-full max-w-xl flex-col justify-center px-8 pb-10 pt-28">
-              <ul className="space-y-1">
-                {PAGES.map((p, i) => (
-                  <motion.li key={p.href} initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 + i * 0.045, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}>
-                    <Link ref={i === 0 ? firstLink : undefined} href={p.href} aria-current={path === p.href ? "page" : undefined} className="display flex items-baseline gap-4 py-1.5 text-[2.1rem] hover:text-lavender aria-[current=page]:text-champagne-soft">
-                      <span className="text-sm font-sans tracking-widest text-lavender/70" aria-hidden>{String(i + 1).padStart(2, "0")}</span>
-                      {p.label}
-                    </Link>
-                  </motion.li>
-                ))}
+            <nav aria-label="Mobile" className="mx-auto flex min-h-full max-w-xl flex-col justify-center px-7 pb-10 pt-28">
+              <ul className="space-y-1.5">
+                {MOBILE_MENU.map((m, i) => {
+                  const active = (m.match as readonly string[]).includes(path);
+                  return (
+                    <motion.li key={m.href} initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.07, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}>
+                      <Link ref={i === 0 ? firstLink : undefined} href={m.href} aria-current={active ? "page" : undefined} className="group flex items-start gap-4 border-b border-white/10 py-3.5 aria-[current=page]:text-champagne-soft">
+                        <span className="pt-2 font-sans text-sm tracking-widest text-lavender/80" aria-hidden>{String(i + 1).padStart(2, "0")}</span>
+                        <span>
+                          <span className="display block text-[1.9rem] leading-tight transition-colors group-hover:text-lavender">{m.label}</span>
+                          <span className="f-serif mt-0.5 block text-[1rem] text-ivory/65">{m.note}</span>
+                        </span>
+                      </Link>
+                    </motion.li>
+                  );
+                })}
               </ul>
-              <Link href="/booking" className="btn btn-light mt-8 self-start">Book Your Vibe</Link>
+              {instagram ? (
+                <motion.div className="mt-7" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75, duration: 0.6 }}>
+                  <InstagramCta url={instagram} />
+                </motion.div>
+              ) : null}
             </nav>
           </motion.div>
         )}

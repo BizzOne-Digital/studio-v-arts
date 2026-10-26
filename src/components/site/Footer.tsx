@@ -3,6 +3,7 @@ import { PAGES } from "@/lib/nav";
 import { addressLine, hasAddress, type Settings } from "@/lib/settings";
 import { Wordmark } from "./Header";
 import { Brush } from "./Brush";
+import { InstagramCta } from "./Instagram";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -35,6 +36,7 @@ export function Footer({ s, logoSrc }: { s: Settings; logoSrc: string | null }) 
           </nav>
 
           <div className="md:col-span-4">
+            {s.social.instagram ? <InstagramCta url={s.social.instagram} className="mb-8" /> : null}
             <h2 className="eyebrow !text-lavender">Say hello</h2>
             <ul className="mt-5 space-y-2.5">
               <li><a className="ulink" href={`mailto:${b.email}`}>{b.email}</a></li>

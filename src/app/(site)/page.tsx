@@ -8,7 +8,7 @@ import { Brush } from "@/components/site/Brush";
 import { Magnetic, Marquee, Mask, Parallax, Reveal, SplitText } from "@/components/site/motion";
 import { Photo } from "@/components/site/Photo";
 import { OrgJsonLd } from "@/components/site/JsonLd";
-import { getFaqs, getGallery, getLiveOffers, getServices, getTestimonials, getUpcomingSessions } from "@/lib/content";
+import { getFaqs, getGallery, getLiveOffers, getServices, getTeam, getTestimonials, getUpcomingSessions } from "@/lib/content";
 import { CATEGORIES, CATEGORY_KEYS, money } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
 import { fmtDate, fmtTime } from "@/lib/time";
@@ -22,8 +22,8 @@ export const metadata: Metadata = {
 const TONE = { move: "move", create: "create", learn: "learn", connect: "connect", rental: "rental" } as const;
 
 export default async function Home() {
-  const [s, services, sessions, offers, gallery, quotes, faqs] = await Promise.all([
-    getSettings(), getServices(), getUpcomingSessions(3), getLiveOffers(), getGallery(), getTestimonials(), getFaqs(true),
+  const [s, services, sessions, offers, gallery, quotes, faqs, team] = await Promise.all([
+    getSettings(), getServices(), getUpcomingSessions(3), getLiveOffers(), getGallery(), getTestimonials(), getFaqs(true), getTeam(),
   ]);
   const tz = s.booking.timezone;
   const panels: Panel[] = CATEGORY_KEYS.map((k) => {
@@ -146,6 +146,24 @@ export default async function Home() {
         <GalleryGrid items={tiles} limit={8} />
         {!gallery.length ? <p className="mt-4 text-sm text-ink/60">Illustrations shown while studio photography is being added.</p> : null}
       </section>
+
+      {team.length ? (
+        <section className="mx-auto max-w-[88rem] px-5 pb-24 sm:px-8">
+          <div className="mb-12 flex flex-wrap items-end justify-between gap-4">
+            <SectionHead eyebrow="The team" title="Meet your instructors." italic={["instructors."]} />
+            <Link href="/team" className="ulink font-semibold text-plum">Instructors &amp; classes &rarr;</Link>
+          </div>
+          <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {team.slice(0, 4).map((m, i) => (
+              <Reveal as="li" key={m.id} delay={i * 0.08}>
+                <div className="aspect-[3/4] overflow-hidden rounded-t-[999px] rounded-b-2xl"><Photo src={m.image} alt={m.imageAlt} tone="about" sizes="25vw" /></div>
+                <h3 className="display mt-4 text-2xl">{m.name}</h3>
+                <p className="eyebrow mt-1">{m.role}</p>
+              </Reveal>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {quotes.length ? (
         <section className="bg-lilac/50 py-24 sm:py-32">

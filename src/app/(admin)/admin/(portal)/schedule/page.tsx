@@ -7,6 +7,7 @@ import { dateStrIn, fmtDateTime, timeStrIn } from "@/lib/time";
 import { addBlockedDate, cancelSession, deleteRow, saveAvailability, saveSession } from "../actions";
 
 export const metadata = { title: "Schedule & availability" };
+const yesterday = () => new Date(Date.now() - 86400000);
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export default async function Schedule({ searchParams }: { searchParams: Promise<{ month?: string; edit?: string }> }) {
@@ -18,7 +19,7 @@ export default async function Schedule({ searchParams }: { searchParams: Promise
   const [events, svcRows, sessRows, blockedRows, booked] = await Promise.all([
     loadMonthEvents(month, tz),
     (await col("services")).find({ booking_type: "class", status: { $ne: "archived" } }).sort({ title: 1 }).toArray(),
-    (await col("sessions")).find({ starts_at: { $gt: new Date(Date.now() - 86400000) } }).sort({ starts_at: 1 }).limit(100).toArray(),
+    (await col("sessions")).find({ starts_at: { $gt: yesterday() } }).sort({ starts_at: 1 }).limit(100).toArray(),
     (await col("blocked_dates")).find({}).sort({ date_start: 1 }).toArray(),
     (await col("bookings")).aggregate([{ $match: { session_id: { $ne: null }, status: { $in: ["pending", "confirmed", "completed"] } } }, { $group: { _id: "$session_id", n: { $sum: "$attendees" } } }]).toArray(),
   ]);
@@ -29,7 +30,7 @@ export default async function Schedule({ searchParams }: { searchParams: Promise
   const blocked = { rows: blockedRows.map((x) => ({ id: x.id, a: x.date_start, b: x.date_end, reason: x.reason })) };
   const editing = sp.edit ? sessions.rows.find((x: any) => x.id === sp.edit) : null;
 
-  const SessionForm = ({ x }: { x?: any }) => (
+  const renderSessionForm = (x?: any) => (
     <AdminForm action={saveSession} submitLabel={x ? "Save session" : "Add session"} resetOnSuccess={!x}>
       {x ? <input type="hidden" name="id" value={x.id} /> : null}
       <div className="grid gap-4 sm:grid-cols-2">
@@ -54,7 +55,7 @@ export default async function Schedule({ searchParams }: { searchParams: Promise
 
       <div className="mt-8 grid gap-6 xl:grid-cols-2">
         <Card title={editing ? "Edit class session" : "Add class session"}>
-          {services.rows.length === 0 ? <Empty>Create a service with booking type &quot;class&quot; first.</Empty> : <SessionForm x={editing} />}
+          {services.rows.length === 0 ? <Empty>Create a service with booking type &quot;class&quot; first.</Empty> : renderSessionForm(editing)}
           {editing ? <a href="/admin/schedule" className="mt-3 inline-block text-sm underline">Cancel editing</a> : null}
         </Card>
         <Card title="Upcoming sessions">

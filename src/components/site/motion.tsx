@@ -187,10 +187,10 @@ export function CursorGlow() {
   const [on, setOn] = useState(false);
   useEffect(() => {
     if (reduce || !window.matchMedia("(pointer: fine) and (min-width: 1024px)").matches) return;
-    setOn(true);
+    const show = requestAnimationFrame(() => setOn(true));
     const move = (e: PointerEvent) => { x.set(e.clientX - 160); y.set(e.clientY - 160); };
     window.addEventListener("pointermove", move, { passive: true });
-    return () => window.removeEventListener("pointermove", move);
+    return () => { cancelAnimationFrame(show); window.removeEventListener("pointermove", move); };
   }, [reduce, x, y]);
   if (!on) return null;
   return (
@@ -209,7 +209,10 @@ export function CountUp({ to, className }: { to: number; className?: string }) {
   const reduce = useReducedMotion();
   const [n, setN] = useState(reduce ? to : 0);
   useEffect(() => {
-    if (!inView || reduce) return setN(to);
+    if (!inView || reduce) {
+      const id = requestAnimationFrame(() => setN(to));
+      return () => cancelAnimationFrame(id);
+    }
     const start = performance.now();
     let raf = 0;
     const tick = (t: number) => {

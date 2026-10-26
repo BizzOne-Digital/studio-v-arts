@@ -24,8 +24,11 @@ export function Hero({ heroSub }: { heroSub: string }) {
   // The intro splash covers the hero on a first visit, so the entrance animation waits for it.
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    if (document.documentElement.dataset.splash !== "on") return setReady(true);
     const on = () => setReady(true);
+    if (document.documentElement.dataset.splash !== "on") {
+      const id = requestAnimationFrame(on);
+      return () => cancelAnimationFrame(id);
+    }
     window.addEventListener("splash-done", on, { once: true });
     return () => window.removeEventListener("splash-done", on);
   }, []);

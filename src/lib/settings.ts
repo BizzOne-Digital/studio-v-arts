@@ -50,7 +50,7 @@ export const DEFAULT_SETTINGS: Settings = {
     shortName: "Studio VM",
     tagline: "Own Your Vibe",
     supportingLine: "Your Space. Your Passion. Your Vibe.",
-    email: "YourstudioV@gmail.com",
+    email: "yourstudiovm@gmail.com",
     secondaryEmail: "",
     phone: "+1 (514) 718-9145",
     sizeSqFt: 600,
@@ -58,7 +58,7 @@ export const DEFAULT_SETTINGS: Settings = {
     logoUrl: "",
   },
   address: { street: "", city: "", region: "", postal: "", country: "", verified: false },
-  social: { instagram: "", facebook: "", tiktok: "", youtube: "", whatsapp: "" },
+  social: { instagram: "https://www.instagram.com/yourstudiovm/", facebook: "", tiktok: "", youtube: "", whatsapp: "" },
   hours: { published: false, days: Array.from({ length: 7 }, () => day(false)), note: "" },
   copy: {
     heroSub: "Move, create, connect. Discover a welcoming space to explore what makes you, you.",

@@ -2,12 +2,13 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ContactForm } from "@/components/site/ContactForm";
 import { OrgJsonLd } from "@/components/site/JsonLd";
-import { PageHero } from "@/components/site/sections";
+import { FaqList, PageHero, Quotes, SectionHead } from "@/components/site/sections";
+import { getFaqs, getTestimonials } from "@/lib/content";
 import { Reveal } from "@/components/site/motion";
 import { addressLine, getSettings, hasAddress, mapLinks } from "@/lib/settings";
 
 export const metadata: Metadata = {
-  title: "Contact",
+  title: "Info & Contact",
   description: "Get in touch with Studio VM by form, email or phone. Find our details, hours and directions.",
 };
 
@@ -15,7 +16,7 @@ const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", 
 
 export default async function Contact({ searchParams }: { searchParams: Promise<{ topic?: string }> }) {
   const { topic } = await searchParams;
-  const s = await getSettings();
+  const [s, faqs, quotes] = await Promise.all([getSettings(), getFaqs(), getTestimonials()]);
   const b = s.business;
   const map = mapLinks(s);
   const socials = (Object.entries(s.social) as [string, string][]).filter(([, v]) => v);
@@ -23,7 +24,7 @@ export default async function Contact({ searchParams }: { searchParams: Promise<
   return (
     <>
       <OrgJsonLd s={s} />
-      <PageHero eyebrow="Contact" title="Let's talk." italic={["talk."]} body="Send us a message, or reach us directly. We read everything and reply personally." tone="connect" photo={4} />
+      <PageHero eyebrow="Info & Contact" title="Let's talk." italic={["talk."]} body="Send us a message, or reach us directly. We read everything and reply personally." tone="connect" photo={4} />
 
       <section className="mx-auto grid max-w-[88rem] gap-16 px-5 pb-24 sm:px-8 lg:grid-cols-12">
         <Reveal className="lg:col-span-7">
@@ -78,6 +79,18 @@ export default async function Contact({ searchParams }: { searchParams: Promise<
           </div>
         </section>
       ) : <div className="pb-16" />}
+      {faqs.length ? (
+        <section id="faq" className="mx-auto max-w-5xl px-5 pb-24 sm:px-8">
+          <SectionHead eyebrow="Good to know" title="Quick answers." italic={["answers."]} className="mb-10" />
+          <FaqList items={faqs} />
+        </section>
+      ) : null}
+      {quotes.length ? (
+        <section id="reviews" className="mx-auto max-w-[88rem] px-5 pb-24 sm:px-8">
+          <SectionHead eyebrow="Kind words" title="From our community." italic={["community."]} className="mb-12" />
+          <Quotes items={quotes.slice(0, 6)} />
+        </section>
+      ) : null}
     </>
   );
 }

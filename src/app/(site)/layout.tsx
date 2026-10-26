@@ -18,7 +18,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <IntroSplash name={s.business.name} logoSrc={logo} tagline={s.business.tagline} />
       <ScrollProgress />
       <CursorGlow />
-      <Header logoSrc={logo} name={s.business.shortName} />
+      <Header logoSrc={logo} name={s.business.shortName} instagram={s.social.instagram || null} />
       <main id="main" className="relative">{children}</main>
       <Footer s={s} logoSrc={logo} />
     </ClientMotion>

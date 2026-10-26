@@ -14,7 +14,8 @@ export function AdminNav({ items, badges, email, logout }: { items: Item[]; badg
   const toggle = useRef<HTMLButtonElement>(null);
   const first = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setOpen(false), [path]);
+  const [seenPath, setSeenPath] = useState(path);
+  if (seenPath !== path) { setSeenPath(path); setOpen(false); }
   useEffect(() => {
     if (!open) return;
     document.body.style.overflow = "hidden";

@@ -19,9 +19,14 @@ export function IntroSplash({ name, logoSrc, tagline }: { name: string; logoSrc:
 
   useEffect(() => {
     const root = document.documentElement;
-    if (root.dataset.splash !== "on") { setPhase("done"); return; }
-    const natural = document.getElementById("splash-logo")?.offsetWidth || 280;
-    setBase(Math.min(2.4, (window.innerWidth - 48) / natural));
+    if (root.dataset.splash !== "on") {
+      const id = requestAnimationFrame(() => setPhase("done"));
+      return () => cancelAnimationFrame(id);
+    }
+    const fit = requestAnimationFrame(() => {
+      const natural = document.getElementById("splash-logo")?.offsetWidth || 280;
+      setBase(Math.min(2.4, (window.innerWidth - 48) / natural));
+    });
     let t1: ReturnType<typeof setTimeout>;
     const go = () => {
       const target = document.getElementById("site-logo")?.getBoundingClientRect();
@@ -35,7 +40,7 @@ export function IntroSplash({ name, logoSrc, tagline }: { name: string; logoSrc:
     t1 = setTimeout(go, 2300);
     const skip = () => { clearTimeout(t1); go(); };
     window.addEventListener("keydown", skip, { once: true });
-    return () => { clearTimeout(t1); window.removeEventListener("keydown", skip); };
+    return () => { cancelAnimationFrame(fit); clearTimeout(t1); window.removeEventListener("keydown", skip); };
   }, []);
 
   const finish = () => {

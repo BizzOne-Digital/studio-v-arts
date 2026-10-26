@@ -289,16 +289,16 @@ function RentalPicker({ p, slots, setSlots, err }: {
   for (let m = p.rules.minHours * 60; m <= p.rules.maxHours * 60; m += Math.max(30, p.rules.stepMin)) durations.push(m);
 
   useEffect(() => {
-    setPick("");
-    if (!date) return setStarts(null);
     const ctl = new AbortController();
-    setLoading(true);
+    const reset = requestAnimationFrame(() => { setPick(""); if (!date) setStarts(null); });
+    if (!date) return () => cancelAnimationFrame(reset);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- shows the spinner while the request runs
     fetch(`/api/availability?date=${date}&minutes=${minutes}`, { signal: ctl.signal })
       .then((r) => r.json())
       .then((j) => { setStarts(j.starts); setReason(j.reason || ""); })
       .catch(() => { if (!ctl.signal.aborted) { setStarts([]); setReason("Could not load availability. Please try again."); } })
       .finally(() => { if (!ctl.signal.aborted) setLoading(false); });
-    return () => ctl.abort();
+    return () => { cancelAnimationFrame(reset); ctl.abort(); };
   }, [date, minutes]);
 
   const add = () => {
