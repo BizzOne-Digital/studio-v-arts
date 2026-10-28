@@ -179,29 +179,6 @@ export function ScrollProgress() {
   return <motion.div aria-hidden className="fixed inset-x-0 top-0 z-[60] h-[3px] origin-left bg-gradient-to-r from-lavender via-mauve to-plum" style={{ scaleX }} />;
 }
 
-/** Soft light that trails the pointer. Desktop fine pointers only; hidden for reduced motion. */
-export function CursorGlow() {
-  const reduce = useReducedMotion();
-  const x = useSpring(useMotionValue(-200), { stiffness: 90, damping: 18 });
-  const y = useSpring(useMotionValue(-200), { stiffness: 90, damping: 18 });
-  const [on, setOn] = useState(false);
-  useEffect(() => {
-    if (reduce || !window.matchMedia("(pointer: fine) and (min-width: 1024px)").matches) return;
-    const show = requestAnimationFrame(() => setOn(true));
-    const move = (e: PointerEvent) => { x.set(e.clientX - 160); y.set(e.clientY - 160); };
-    window.addEventListener("pointermove", move, { passive: true });
-    return () => { cancelAnimationFrame(show); window.removeEventListener("pointermove", move); };
-  }, [reduce, x, y]);
-  if (!on) return null;
-  return (
-    <motion.div
-      aria-hidden
-      className="pointer-events-none fixed left-0 top-0 z-[5] h-80 w-80 rounded-full opacity-60 mix-blend-multiply blur-3xl"
-      style={{ x, y, background: "radial-gradient(circle, rgba(196,174,208,.75), rgba(196,174,208,0) 65%)" }}
-    />
-  );
-}
-
 /** Counts up once when scrolled into view. Only used for values that come from real data. */
 export function CountUp({ to, className }: { to: number; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
