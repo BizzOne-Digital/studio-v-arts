@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default function AdminRoot({ children }: { children: React.ReactNode }) {
-  return <div className="min-h-svh bg-[#f6f2f8]">{children}</div>;
+  return <div className="min-h-svh bg-[#f4f1ea]">{children}</div>;
 }

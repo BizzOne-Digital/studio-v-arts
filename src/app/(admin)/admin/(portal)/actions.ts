@@ -60,7 +60,7 @@ const zfirst = (e: z.ZodError) => e.issues[0]?.message ?? "Check the form values
 
 
 /* ---------------- ordering ---------------- */
-const ORDERABLE = ["services", "testimonials", "faqs", "team_members", "gallery_images", "offers"] as const;
+const ORDERABLE = ["services", "testimonials", "faqs", "team_members", "gallery_images", "offers", "rooms"] as const;
 export const moveRow = guardBound(async (table: string, id: string, dir: "up" | "down") => {
   if (!(ORDERABLE as readonly string[]).includes(table)) return bad("Unknown list.");
   const c = await col(table);
@@ -398,7 +398,7 @@ export const setLive = guardBound(async (on: boolean) => {
   const s = await getSettings();
   if (on) {
     const offers = await loadOffers();
-    const hasPrice = s.booking.regularRateCents != null || offers.some((o) => o.active && (o.kind === "flat_rate" || o.kind === "package"));
+    const hasPrice = s.booking.regularRateCents != null || offers.some((o) => o.active && (o.kind === "flat_rate" || o.kind === "package")) || (await (await col("rooms")).countDocuments({ active: { $ne: false }, price_cents: { $gt: 0 } })) > 0;
     const missing = launchChecklist(s, hasPrice).filter((c) => !c.ok).map((c) => c.label);
     if (missing.length) return bad(`Cannot enable live bookings yet. Missing: ${missing.join("; ")}.`);
   }
@@ -409,4 +409,56 @@ export const setLive = guardBound(async (on: boolean) => {
 export const setMessageStatus = guardBound(async (id: string, status: "new" | "read" | "archived") => {
   await upd("contact_messages", id, { status });
   return ok("Updated.");
+});
+
+/* ---------------- rooms ---------------- */
+export const saveRoom = guard(async (fd) => {
+  const name = str(fd, "name");
+  if (name.length < 2) return bad("Room name is required.");
+  const price = cents(fd.get("price"));
+  if (price == null || price < 0) return bad("Enter the price per hour.");
+  const capacity = Number(fd.get("capacity"));
+  if (!Number.isInteger(capacity) || capacity < 1) return bad("Maximum people must be 1 or more.");
+  const size = num(fd.get("size"));
+  const after = cents(fd.get("afterPrice"));
+  const until = str(fd, "priceUntil") || null;
+  if (until && !isDateStr(until)) return bad("Check the date the introductory price ends.");
+  if (after != null && !until) return bad("Add the date the introductory price ends, or clear the later price.");
+  const fields: Record<string, unknown> = {
+    name, size_sqft: size, price_cents: price, after_price_cents: after, price_until: until, price_note: str(fd, "priceNote").slice(0, 160),
+    capacity, description: str(fd, "description").slice(0, 1200), image_alt: str(fd, "imageAlt").slice(0, 200), active: chk(fd, "active"),
+    uses: str(fd, "uses").split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 12), image_url: cleanImageUrl(fd.get("image_url")), updated_at: new Date(),
+  };
+  const id = str(fd, "id");
+  if (id) {
+    const old = await (await col("rooms")).findOne({ _id: id } as any);
+    await upd("rooms", id, { ...fields, image_id: null });
+    if (old?.image_url && old.image_url !== fields.image_url) await deleteUploadByUrl(old.image_url);
+    return ok("Room saved.");
+  }
+  const c = await col("rooms");
+  let slug = slugify(name);
+  while (await c.findOne({ slug })) slug += "-" + Math.floor(Math.random() * 90 + 10);
+  await insert("rooms", { ...fields, slug, image_id: null, sort_order: await nextSort("rooms") });
+  return ok("Room added.");
+});
+
+export const deleteRoom = guardBound(async (id: string) => {
+  if ((await (await col("bookings")).countDocuments({ room_id: id })) > 0) return bad("This room has bookings. Turn off \"Bookable online\" instead of deleting it.");
+  const c = await col("rooms");
+  const doc = await c.findOne({ _id: id } as any);
+  await c.deleteOne({ _id: id } as any);
+  if (doc?.image_url) await deleteUploadByUrl(doc.image_url);
+  return ok("Room deleted.");
+});
+
+/* ---------------- payments and emails ---------------- */
+export const savePayments = guard(async (fd) => {
+  const s = await getSettings();
+  const email = z.string().trim().email("Enter a valid Interac email address.").safeParse(str(fd, "interacEmail"));
+  if (!email.success) return bad(zfirst(email.error));
+  const notify = str(fd, "notifyEmail");
+  if (notify && !z.string().email().safeParse(notify).success) return bad("Enter a valid email for booking notifications, or leave it empty.");
+  await saveSettings({ ...s, payment: { interacEmail: email.data, instructions: str(fd, "instructions").slice(0, 1500), notifyEmail: notify, confirmInstructions: str(fd, "confirmInstructions").slice(0, 3000) } });
+  return ok("Payment and email settings saved.");
 });

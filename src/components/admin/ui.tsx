@@ -52,7 +52,7 @@ export function Field({ label, children, hint, wide }: { label: string; children
 export function Check({ name, label, defaultChecked, hint }: { name: string; label: string; defaultChecked?: boolean; hint?: string }) {
   return (
     <label className="flex min-h-11 items-start gap-3">
-      <input type="checkbox" name={name} defaultChecked={defaultChecked} className="mt-1 h-5 w-5 accent-[#4c294f]" />
+      <input type="checkbox" name={name} defaultChecked={defaultChecked} className="mt-1 h-5 w-5 accent-[#15120e]" />
       <span><span className="font-medium">{label}</span>{hint ? <span className="block text-xs text-ink/60">{hint}</span> : null}</span>
     </label>
   );

@@ -62,7 +62,7 @@ export function Footer({ s, logoSrc }: { s: Settings; logoSrc: string | null }) 
         </div>
 
         <div className="mt-20 flex flex-col gap-2 border-t border-ivory/15 pt-6 text-sm text-ivory/60 sm:flex-row sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} {b.name}. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} {b.name} All rights reserved.</p>
           <p>All prices in CAD.</p>
         </div>
       </div>

@@ -11,13 +11,15 @@
     "test:engine": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/test-engine.ts",
     "db:seed:demo": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/seed.ts --demo",
     "db:admin": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/create-admin.ts",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "db:v2": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/v2.ts"
   },
   "dependencies": {
     "jose": "^6.2.12",
     "mongodb": "^7.7.0",
     "motion": "^14.4.0",
     "next": "^16.4.2",
+    "nodemailer": "^10.2.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "server-only": "^0.0.1",
@@ -27,6 +29,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.5",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "eslint": "^9.39.5",

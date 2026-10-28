@@ -2,14 +2,25 @@ import "server-only";
 import crypto from "node:crypto";
 import { col, insert, lockStudio, tx, type ClientSession } from "./db";
 import { addTax, priceRental, type OfferRow, type PriceSlot, type Quote } from "./pricing";
+import { mainRoomId, roomRate } from "./rooms";
 import { getSettings, type Settings } from "./settings";
-import { addDays, fromMinutes, isDateStr, isTimeStr, minutesOf, weekdayOf, zonedToUtc } from "./time";
+import { addDays, dateStrIn, fromMinutes, isDateStr, isTimeStr, minutesOf, weekdayOf, zonedToUtc } from "./time";
 
 export type SlotInput = { date: string; start: string; minutes: number };
 export type Busy = { start: Date; end: Date; kind: "class" | "rental" };
 type Fail = { ok: false; error: string; field?: string };
 export type Result<T> = ({ ok: true } & T) | Fail;
 const fail = (error: string, field?: string): Fail => ({ ok: false, error, field });
+
+/** A bookable space. Each room has its own calendar: a booking in one room never blocks another. */
+type RoomDoc = { id: string; name: string; price_cents: number; after_price_cents?: number | null; price_until?: string | null; capacity: number; active?: boolean };
+type RoomRef = { id: string; mainId: string };
+
+async function findRoom(idOrSlug: string, ses?: ClientSession): Promise<RoomDoc | null> {
+  const c = await col("rooms");
+  const r = (await c.findOne({ _id: idOrSlug } as any, { session: ses })) ?? (await c.findOne({ slug: idOrSlug }, { session: ses }));
+  return (r as unknown as RoomDoc) ?? null;
+}
 
 /* ---------- loaders ---------- */
 
@@ -30,7 +41,8 @@ async function loadBlocked(s?: ClientSession) {
   return rows.map((r) => ({ s: r.date_start as string, e: r.date_end as string }));
 }
 
-export async function loadBusy(s: ClientSession | undefined, from: Date, to: Date, ex?: { bookingId?: string; sessionId?: string }): Promise<Busy[]> {
+/** Everything that occupies the given room between from and to. Classes and legacy bookings belong to the main room. */
+export async function loadBusy(s: ClientSession | undefined, from: Date, to: Date, room: RoomRef, ex?: { bookingId?: string; sessionId?: string }): Promise<Busy[]> {
   const sf: any = { status: "published", starts_at: { $lt: to }, ends_at: { $gt: from } };
   if (ex?.sessionId) sf._id = { $ne: ex.sessionId };
   const kf: any = { active: true, starts_at: { $lt: to }, ends_at: { $gt: from } };
@@ -39,15 +51,16 @@ export async function loadBusy(s: ClientSession | undefined, from: Date, to: Dat
     (await col("sessions")).find(sf, { session: s }).toArray(),
     (await col("booking_slots")).find(kf, { session: s }).toArray(),
   ]);
+  const here = (r: any) => (r.room_id ?? room.mainId) === room.id;
   return [
-    ...sessions.map((r) => ({ start: r.starts_at as Date, end: r.ends_at as Date, kind: "class" as const })),
-    ...slots.map((r) => ({ start: r.starts_at as Date, end: r.ends_at as Date, kind: "rental" as const })),
+    ...sessions.filter(here).map((r) => ({ start: r.starts_at as Date, end: r.ends_at as Date, kind: "class" as const })),
+    ...slots.filter(here).map((r) => ({ start: r.starts_at as Date, end: r.ends_at as Date, kind: "rental" as const })),
   ];
 }
 
 /* ---------- conflict + slot rules ---------- */
 
-/** Two uses of the room need cleanup + setup between them, so the required gap is after + before. */
+/** Two uses of the same room need setup + cleanup between them (zero unless configured). */
 export const gapMs = (s: Settings) => (s.booking.bufferBeforeMin + s.booking.bufferAfterMin) * 60_000;
 
 export function findConflict(range: { start: Date; end: Date }, busy: Busy[], s: Settings): Busy | null {
@@ -62,46 +75,56 @@ export function resolveSlot(
   if (!isDateStr(input.date) || !isTimeStr(input.start)) return fail("Choose a valid date and start time.", "slot");
   const minutes = Number(input.minutes);
   if (!Number.isInteger(minutes) || minutes % b.slotStepMin !== 0) return fail("Choose a valid duration.", "slot");
-  if (minutes < b.minHours * 60 || minutes > b.maxHours * 60) return fail(`Rentals run from ${b.minHours} to ${b.maxHours} hours.`, "slot");
+  if (minutes < b.minHours * 60 || minutes > b.maxHours * 60) return fail(`Bookings run from ${b.minHours} to ${b.maxHours} hours.`, "slot");
   if (blocked.some((x) => input.date >= x.s && input.date <= x.e)) return fail("The studio is unavailable on that date.", "slot");
   const h = b.rentalHours[weekdayOf(input.date)];
   if (!h?.enabled) return fail("The studio is not open for rentals on that day.", "slot");
   const startMin = minutesOf(input.start);
   if (startMin % b.slotStepMin !== 0 || startMin < minutesOf(h.open) || startMin + minutes > minutesOf(h.close))
-    return fail(`Rentals on that day run ${h.open} to ${h.close}.`, "slot");
+    return fail(`Bookings on that day run ${h.open} to ${h.close}.`, "slot");
   const start = zonedToUtc(input.date, input.start, b.timezone);
   const end = new Date(start.getTime() + minutes * 60_000);
   if (!opts.skipLead && start.getTime() < now.getTime() + b.leadTimeHours * 3_600_000)
-    return fail(`Rentals need at least ${b.leadTimeHours} hours notice.`, "slot");
+    return fail(b.leadTimeHours > 0 ? `Bookings need at least ${b.leadTimeHours} hours notice.` : "That time has already passed.", "slot");
   return { ok: true, start, end };
 }
 
-/** Available start times for a date and duration, using exactly the same rules as submission. */
-export async function availabilityFor(date: string, minutes: number) {
+export type DaySlot = { start: string; end: string; state: "free" | "booked" | "past" };
+
+/** The whole day as a slot grid for one room, so the public calendar can show free, booked and past slots. */
+export async function daySlots(roomIdOrSlug: string, date: string): Promise<{ slots: DaySlot[]; reason: string; open?: string; close?: string; step: number }> {
   const s = await getSettings();
   const b = s.booking;
-  if (!isDateStr(date)) return { starts: [] as string[], reason: "Choose a valid date." };
+  const step = b.slotStepMin;
+  if (!isDateStr(date)) return { slots: [], reason: "Choose a valid date.", step };
+  const room = await findRoom(roomIdOrSlug);
+  const mainId = (await mainRoomId()) ?? "";
+  if (!room) return { slots: [], reason: "Choose a room.", step };
   const blocked = await loadBlocked();
   const h = b.rentalHours[weekdayOf(date)];
-  if (!h?.enabled) return { starts: [], reason: "The studio is not open for rentals on this day." };
-  if (blocked.some((x) => date >= x.s && date <= x.e)) return { starts: [], reason: "The studio is unavailable on this date." };
-  const busy = await loadBusy(undefined, zonedToUtc(addDays(date, -1), "00:00", b.timezone), zonedToUtc(addDays(date, 2), "00:00", b.timezone));
-  const now = new Date();
-  const starts: string[] = [];
-  for (let m = minutesOf(h.open); m + minutes <= minutesOf(h.close); m += b.slotStepMin) {
-    const r = resolveSlot({ date, start: fromMinutes(m), minutes }, s, blocked, now);
-    if (r.ok && !findConflict(r, busy, s)) starts.push(fromMinutes(m));
+  if (!h?.enabled) return { slots: [], reason: "The studio is closed on this day.", step };
+  if (blocked.some((x) => date >= x.s && date <= x.e)) return { slots: [], reason: "The studio is unavailable on this date.", step };
+  const busy = await loadBusy(undefined, zonedToUtc(addDays(date, -1), "00:00", b.timezone), zonedToUtc(addDays(date, 2), "00:00", b.timezone), { id: room.id, mainId });
+  const now = Date.now();
+  const slots: DaySlot[] = [];
+  for (let m = minutesOf(h.open); m + step <= minutesOf(h.close); m += step) {
+    const start = zonedToUtc(date, fromMinutes(m), b.timezone);
+    const end = new Date(start.getTime() + step * 60_000);
+    let state: DaySlot["state"] = "free";
+    if (start.getTime() < now + b.leadTimeHours * 3_600_000) state = "past";
+    else if (findConflict({ start, end }, busy, s)) state = "booked";
+    slots.push({ start: fromMinutes(m), end: fromMinutes(m + step), state });
   }
-  return { starts, reason: starts.length ? "" : "No start times are free for that length. Try another day or a shorter session." };
+  return { slots, reason: "", open: h.open, close: h.close, step };
 }
 
 /* ---------- pricing helpers ---------- */
 
 async function validateAndPrice(
-  ses: ClientSession | undefined, s: Settings, slots: SlotInput[], opts: { excludeBookingId?: string; skipLead?: boolean },
+  ses: ClientSession | undefined, s: Settings, slots: SlotInput[], opts: { excludeBookingId?: string; skipLead?: boolean }, room: RoomDoc, mainId: string,
 ): Promise<Result<{ ranges: PriceSlot[]; quote: Quote }>> {
   const b = s.booking;
-  if (!slots.length) return fail("Add at least one session.", "slot");
+  if (!slots.length) return fail("Choose a date and time.", "slot");
   if (slots.length > b.maxSlotsPerBooking) return fail(`You can request up to ${b.maxSlotsPerBooking} sessions at once.`, "slot");
   const blocked = await loadBlocked(ses);
   const now = new Date();
@@ -113,28 +136,34 @@ async function validateAndPrice(
   }
   const sorted = [...ranges].sort((a, c) => a.start.getTime() - c.start.getTime());
   for (let i = 1; i < sorted.length; i++)
-    if (sorted[i].start.getTime() < sorted[i - 1].end.getTime() + gapMs(s)) return fail("Two of your sessions overlap or are too close together.", "slot");
+    if (sorted[i].start.getTime() < sorted[i - 1].end.getTime() + gapMs(s)) return fail("Two of your sessions overlap.", "slot");
   const busy = await loadBusy(
     ses,
     new Date(sorted[0].start.getTime() - 86_400_000),
     new Date(sorted[sorted.length - 1].end.getTime() + 86_400_000),
+    { id: room.id, mainId },
     { bookingId: opts.excludeBookingId },
   );
-  for (const r of ranges) if (findConflict(r, busy, s)) return fail("One of those times has just been taken. Please choose another.", "slot");
+  for (const r of ranges) if (findConflict(r, busy, s)) return fail("That time has just been booked by someone else. Please choose another.", "slot");
+  const rate = roomRate({ priceCents: room.price_cents, afterPriceCents: room.after_price_cents ?? null, priceUntil: room.price_until ?? null }, dateStrIn(new Date(), b.timezone));
+  // The room's own hourly price is the "regular" rate; any active offers can only lower it, never below the minimum.
+  const s2: Settings = { ...s, booking: { ...s.booking, regularRateCents: rate, minRateCents: Math.min(s.booking.minRateCents, rate) } };
   const offers = await loadOffers(ses);
   const usage = await loadUsage(ses, opts.excludeBookingId);
-  const quote = priceRental({ slots: ranges, settings: s, offers, usage });
+  const quote = priceRental({ slots: ranges, settings: s2, offers, usage });
   if (!quote) return fail("Online pricing is not available for this selection yet. Please contact the studio.", "slot");
   return { ok: true, ranges, quote };
 }
 
 /** Server-side quote for the booking summary. Read-only. */
-export async function quoteRental(slots: SlotInput[]) {
+export async function quoteRental(slots: SlotInput[], roomIdOrSlug: string) {
   const s = await getSettings();
-  const r = await validateAndPrice(undefined, s, slots, {});
+  const room = await findRoom(roomIdOrSlug);
+  if (!room || room.active === false) return fail("Choose a room.", "room");
+  const r = await validateAndPrice(undefined, s, slots, {}, room, (await mainRoomId()) ?? "");
   if (!r.ok) return r;
   const t = addTax(r.quote.subtotalCents, s);
-  return { ok: true as const, ...r.quote, ...t, taxLabel: s.booking.tax.enabled ? s.booking.tax.label || "Tax" : "" };
+  return { ok: true as const, ...r.quote, ...t, roomName: room.name, taxLabel: s.booking.tax.enabled ? s.booking.tax.label || "Tax" : "" };
 }
 
 /* ---------- create ---------- */
@@ -150,27 +179,30 @@ async function newReference(ses: ClientSession) {
 
 export type Customer = { name: string; email: string; phone: string; notes: string };
 
-export async function createRentalBooking(c: Customer, slots: SlotInput[], attendees: number, activity: string) {
+export async function createRentalBooking(c: Customer, slots: SlotInput[], attendees: number, reason: string, roomIdOrSlug: string, category: string) {
   const s = await getSettings();
   if (!s.booking.live) return fail("Online booking is not open yet.");
-  if (!Number.isInteger(attendees) || attendees < 1 || attendees > s.booking.rentalMaxAttendees)
-    return fail(`Attendees must be between 1 and ${s.booking.rentalMaxAttendees}.`, "attendees");
-  return tx(async (ses): Promise<Result<{ id: string; reference: string; totalCents: number; subtotalCents: number; first: Date }>> => {
+  const mainId = (await mainRoomId()) ?? "";
+  return tx(async (ses): Promise<Result<{ id: string; reference: string; totalCents: number; subtotalCents: number; first: Date; roomName: string }>> => {
     await lockStudio(ses);
-    const r = await validateAndPrice(ses, s, slots, {});
+    const room = await findRoom(roomIdOrSlug, ses);
+    if (!room || room.active === false) return fail("Choose a room.", "room");
+    if (!Number.isInteger(attendees) || attendees < 1 || attendees > room.capacity) return fail(`This room holds up to ${room.capacity} people.`, "attendees");
+    const r = await validateAndPrice(ses, s, slots, {}, room, mainId);
     if (!r.ok) return r;
     const t = addTax(r.quote.subtotalCents, s);
     const reference = await newReference(ses);
     const now = new Date();
     const b = await insert("bookings", {
       reference, kind: "rental", status: "pending", payment_status: "unpaid", customer_name: c.name, customer_email: c.email,
-      customer_phone: c.phone, attendees, session_id: null, service_id: null, activity, customer_notes: c.notes, internal_notes: "",
+      customer_phone: c.phone, attendees, session_id: null, service_id: null, room_id: room.id, room_name: room.name, category,
+      activity: reason, customer_notes: c.notes, internal_notes: "",
       subtotal_cents: r.quote.subtotalCents, tax_cents: t.taxCents, total_cents: t.totalCents, currency: "CAD", offer_id: r.quote.offerId,
       price_breakdown: { label: r.quote.label, hours: r.quote.hours, perHourCents: r.quote.perHourCents },
       updated_at: now, status_changed_at: now,
     }, ses);
-    for (const sl of r.ranges) await insert("booking_slots", { booking_id: b.id, starts_at: sl.start, ends_at: sl.end, active: true }, ses);
-    return { ok: true, id: b.id, reference, totalCents: t.totalCents, subtotalCents: r.quote.subtotalCents, first: r.ranges[0].start };
+    for (const sl of r.ranges) await insert("booking_slots", { booking_id: b.id, room_id: room.id, starts_at: sl.start, ends_at: sl.end, active: true }, ses);
+    return { ok: true, id: b.id, reference, totalCents: t.totalCents, subtotalCents: r.quote.subtotalCents, first: r.ranges[0].start, roomName: room.name };
   });
 }
 
@@ -204,7 +236,7 @@ export async function createClassBooking(c: Customer, sessionId: string, attende
     const now = new Date();
     const b = await insert("bookings", {
       reference, kind: "class", status: "pending", payment_status: "unpaid", customer_name: c.name, customer_email: c.email, customer_phone: c.phone,
-      attendees, session_id: sessionId, service_id: svc.id, activity: "", customer_notes: c.notes, internal_notes: "",
+      attendees, session_id: sessionId, service_id: svc.id, room_id: null, room_name: "", category: "", activity: "", customer_notes: c.notes, internal_notes: "",
       subtotal_cents: sub, tax_cents: t.taxCents, total_cents: t.totalCents, currency: "CAD", offer_id: null,
       price_breakdown: { label: "Class", unitCents: price }, updated_at: now, status_changed_at: now,
     }, ses);
@@ -234,16 +266,19 @@ export async function setBookingStatus(id: string, next: string): Promise<Result
 
 export async function rescheduleRental(id: string, slots: SlotInput[]): Promise<Result<{ totalCents: number }>> {
   const s = await getSettings();
+  const mainId = (await mainRoomId()) ?? "";
   return tx(async (ses): Promise<Result<{ totalCents: number }>> => {
     await lockStudio(ses);
     const b = await (await col("bookings")).findOne({ _id: id } as any, { session: ses });
     if (!b || b.kind !== "rental") return fail("Only rental bookings can be rescheduled here.");
     if (!["pending", "confirmed"].includes(b.status)) return fail("Only pending or confirmed bookings can be rescheduled.");
-    const v = await validateAndPrice(ses, s, slots, { excludeBookingId: id, skipLead: true });
+    const room = await findRoom(b.room_id ?? mainId, ses);
+    if (!room) return fail("The room for this booking no longer exists.");
+    const v = await validateAndPrice(ses, s, slots, { excludeBookingId: id, skipLead: true }, room, mainId);
     if (!v.ok) return v;
     const t = addTax(v.quote.subtotalCents, s);
     await (await col("booking_slots")).deleteMany({ booking_id: id }, { session: ses });
-    for (const sl of v.ranges) await insert("booking_slots", { booking_id: id, starts_at: sl.start, ends_at: sl.end, active: true }, ses);
+    for (const sl of v.ranges) await insert("booking_slots", { booking_id: id, room_id: room.id, starts_at: sl.start, ends_at: sl.end, active: true }, ses);
     await (await col("bookings")).updateOne({ _id: id } as any, { $set: {
       subtotal_cents: v.quote.subtotalCents, tax_cents: t.taxCents, total_cents: t.totalCents, offer_id: v.quote.offerId, updated_at: new Date(),
       price_breakdown: { label: v.quote.label, hours: v.quote.hours, perHourCents: v.quote.perHourCents },
@@ -252,12 +287,13 @@ export async function rescheduleRental(id: string, slots: SlotInput[]): Promise<
   });
 }
 
-/** Checks a proposed class session against rentals and other published sessions. Call inside tx after lockStudio. */
+/** Checks a proposed class session against rentals and other published sessions in the main room. Call inside tx after lockStudio. */
 export async function sessionConflict(ses: ClientSession | undefined, start: Date, end: Date, s: Settings, excludeSessionId?: string): Promise<string | null> {
-  const busy = await loadBusy(ses, new Date(start.getTime() - 86_400_000), new Date(end.getTime() + 86_400_000), { sessionId: excludeSessionId });
+  const mainId = (await mainRoomId()) ?? "";
+  const busy = await loadBusy(ses, new Date(start.getTime() - 86_400_000), new Date(end.getTime() + 86_400_000), { id: mainId, mainId }, { sessionId: excludeSessionId });
   const c = findConflict({ start, end }, busy, s);
   if (!c) return null;
   return c.kind === "rental"
-    ? "That time clashes with a studio rental (including setup and cleanup buffers)."
-    : "That time clashes with another class (including setup and cleanup buffers).";
+    ? "That time clashes with a studio booking in the main studio."
+    : "That time clashes with another class.";
 }

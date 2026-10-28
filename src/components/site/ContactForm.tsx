@@ -14,7 +14,7 @@ function Field({ id, label, error, children, hint }: { id: string; label: string
   );
 }
 
-const input = (bad?: boolean) => cn("w-full min-h-12 rounded-2xl border bg-white px-4 py-3 text-base outline-none transition-shadow focus:shadow-[0_0_0_3px_rgba(167,123,158,.45)]", bad ? "border-[#9b1c3a]" : "border-plum/25");
+const input = (bad?: boolean) => cn("w-full min-h-12 rounded-2xl border bg-white px-4 py-3 text-base outline-none transition-shadow focus:shadow-[0_0_0_3px_rgba(201,169,97,.45)]", bad ? "border-[#9b1c3a]" : "border-plum/25");
 
 export function ContactForm({ topic }: { topic?: string }) {
   const [state, action, pending] = useActionState<ContactState, FormData>(submitContact, null);

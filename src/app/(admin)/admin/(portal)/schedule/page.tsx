@@ -1,6 +1,7 @@
 import { ActionButton, AdminForm, Field } from "@/components/admin/ui";
 import { Badge, Card, Empty, Title } from "@/components/admin/server-ui";
 import { MonthCalendar, loadMonthEvents } from "@/components/admin/MonthCalendar";
+import { DayBookings } from "@/components/admin/DayBookings";
 import { col } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
 import { dateStrIn, fmtDateTime, timeStrIn } from "@/lib/time";
@@ -10,7 +11,7 @@ export const metadata = { title: "Schedule & availability" };
 const yesterday = () => new Date(Date.now() - 86400000);
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-export default async function Schedule({ searchParams }: { searchParams: Promise<{ month?: string; edit?: string }> }) {
+export default async function Schedule({ searchParams }: { searchParams: Promise<{ month?: string; edit?: string; day?: string }> }) {
   const sp = await searchParams;
   const s = await getSettings();
   const b = s.booking;
@@ -51,7 +52,8 @@ export default async function Schedule({ searchParams }: { searchParams: Promise
     <>
       <Title title="Schedule & availability" sub={`The studio is one shared room. Classes and rentals are checked against each other, including setup and cleanup buffers. Times are in ${tz}.`} />
 
-      <Card title="Studio calendar"><MonthCalendar month={month} events={events} tz={tz} basePath="/admin/schedule" /></Card>
+      <Card title="Studio calendar"><MonthCalendar month={month} events={events} tz={tz} basePath="/admin/schedule" day={/^\d{4}-\d{2}-\d{2}$/.test(sp.day ?? "") ? sp.day : undefined} /></Card>
+      {/^\d{4}-\d{2}-\d{2}$/.test(sp.day ?? "") ? <DayBookings day={sp.day!} tz={tz} /> : <p className="mt-3 text-sm text-ink/60">Click a date to see all bookings on that day.</p>}
 
       <div className="mt-8 grid gap-6 xl:grid-cols-2">
         <Card title={editing ? "Edit class session" : "Add class session"}>
@@ -81,7 +83,7 @@ export default async function Schedule({ searchParams }: { searchParams: Promise
             <div className="space-y-2">
               {b.rentalHours.map((d, i) => (
                 <div key={i} className="grid grid-cols-[7rem_1fr_1fr] items-center gap-3">
-                  <label className="flex min-h-11 items-center gap-2 text-sm font-semibold"><input type="checkbox" name={`en${i}`} defaultChecked={d.enabled} className="h-5 w-5 accent-[#4c294f]" />{DAYS[i].slice(0, 3)}</label>
+                  <label className="flex min-h-11 items-center gap-2 text-sm font-semibold"><input type="checkbox" name={`en${i}`} defaultChecked={d.enabled} className="h-5 w-5 accent-[#15120e]" />{DAYS[i].slice(0, 3)}</label>
                   <input type="time" name={`open${i}`} defaultValue={d.open} aria-label={`${DAYS[i]} opens`} className="admin-input" />
                   <input type="time" name={`close${i}`} defaultValue={d.close} aria-label={`${DAYS[i]} closes`} className="admin-input" />
                 </div>

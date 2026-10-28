@@ -61,7 +61,7 @@ export function IntroSplash({ name, logoSrc, tagline }: { name: string; logoSrc:
       animate={{ backgroundColor: moving ? "rgba(255,255,255,0)" : "rgba(255,255,255,1)" }}
       transition={{ duration: 0.8, delay: moving ? 0.15 : 0 }}
     >
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_45%,#efe6f8,#fff_70%)]" style={{ opacity: moving ? 0 : 1, transition: "opacity .8s" }} />
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_45%,#f6efdc,#fff_70%)]" style={{ opacity: moving ? 0 : 1, transition: "opacity .8s" }} />
       <motion.div aria-hidden className="pointer-events-none absolute w-[min(34rem,90vw)]" animate={{ opacity: moving ? 0 : 0.55, scale: moving ? 1.08 : 1 }} transition={{ duration: 0.8 }}>
         <Brush tone="lavender" delay={0.2} duration={2.2} />
       </motion.div>
@@ -78,7 +78,7 @@ export function IntroSplash({ name, logoSrc, tagline }: { name: string; logoSrc:
         </motion.div>
 
         <motion.p
-          className="splash-in f-head mt-24 text-[clamp(1.6rem,4.5vw,2.6rem)] italic text-[#3a0f35] sm:mt-28"
+          className="splash-in f-head mt-24 text-[clamp(1.6rem,4.5vw,2.6rem)] italic text-[#15120e] sm:mt-28"
           style={{ animationDelay: "0.9s" }}
           animate={{ opacity: moving ? 0 : 1, y: moving ? -10 : 0 }}
           transition={{ duration: 0.5 }}

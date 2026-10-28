@@ -38,7 +38,8 @@ export default async function BookingDetail({ params }: { params: Promise<{ id: 
           <Card title="Booking">
             <div className="flex flex-wrap items-center gap-3"><Badge v={b.status} /><span className="text-sm text-ink/60">Payment:</span><Badge v={b.payment_status} /></div>
             <dl className="mt-5 grid gap-4 sm:grid-cols-2 text-sm">
-              <div><dt className="eyebrow">What</dt><dd className="mt-1">{b.kind === "class" ? b.title : `Studio rental: ${b.activity}`}</dd></div>
+              <div><dt className="eyebrow">What</dt><dd className="mt-1">{b.kind === "class" ? b.title : `${b.room_name || "Studio"}${b.category ? " · " + b.category : ""}`}</dd></div>
+              {b.kind === "rental" ? <div className="sm:col-span-2"><dt className="eyebrow">Reason for booking</dt><dd className="mt-1 whitespace-pre-line">{b.activity || "-"}</dd></div> : null}
               <div><dt className="eyebrow">People</dt><dd className="mt-1">{b.attendees}</dd></div>
               <div className="sm:col-span-2"><dt className="eyebrow">When ({tz})</dt><dd className="mt-1 space-y-0.5">{b.kind === "class" ? <p>{fmtRange(b.ss_start, b.ss_end, tz)}</p> : slots.map((x, i) => <p key={i}>{fmtRange(x.starts_at, x.ends_at, tz)}</p>)}</dd></div>
               <div><dt className="eyebrow">Price</dt><dd className="mt-1">Subtotal {money(b.subtotal_cents)} · Tax {money(b.tax_cents)} · <strong>Total {money(b.total_cents)} CAD</strong></dd></div>

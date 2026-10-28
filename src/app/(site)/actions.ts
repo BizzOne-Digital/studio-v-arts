@@ -28,10 +28,10 @@ const flatten = (e: z.ZodError): FieldErrors => {
 
 const slotSchema = z.object({ date: z.string(), start: z.string(), minutes: z.number().int() });
 
-export async function quoteAction(slots: SlotInput[]) {
+export async function quoteAction(slots: SlotInput[], roomId: string) {
   const parsed = z.array(slotSchema).max(24).safeParse(slots);
-  if (!parsed.success) return { ok: false as const, error: "Check your selected times." };
-  return quoteRental(parsed.data);
+  if (!parsed.success || typeof roomId !== "string") return { ok: false as const, error: "Check your selected times." };
+  return quoteRental(parsed.data, roomId);
 }
 
 export async function submitClassBooking(input: unknown): Promise<BookingResult> {
@@ -49,11 +49,13 @@ export async function submitRentalBooking(input: unknown): Promise<BookingResult
   const p = customer.extend({
     slots: z.array(slotSchema).min(1).max(24),
     attendees: z.number().int().min(1).max(200),
-    activity: z.string().trim().min(3, "Tell us what you are planning.").max(200),
+    roomId: z.string().min(1, "Choose a room.").max(80),
+    category: z.string().trim().min(2, "Choose what the booking is for.").max(60),
+    activity: z.string().trim().min(3, "Tell us the reason for your booking.").max(300),
   }).safeParse(input);
   if (!p.success) return { ok: false, error: "Please check the highlighted fields.", fields: flatten(p.error) };
   if (!throttle(`book:${await clientIp()}`, 8, 10 * 60_000)) return { ok: false, error: "Too many requests. Please wait a few minutes and try again." };
-  const r = await createRentalBooking({ name: p.data.name, email: p.data.email, phone: p.data.phone, notes: p.data.notes }, p.data.slots, p.data.attendees, p.data.activity);
+  const r = await createRentalBooking({ name: p.data.name, email: p.data.email, phone: p.data.phone, notes: p.data.notes }, p.data.slots, p.data.attendees, p.data.activity, p.data.roomId, p.data.category);
   if (!r.ok) return { ok: false, error: r.error, fields: r.field ? { [r.field]: r.error } : undefined };
   updateTag("bookings");
   const n = await notifyNewBooking(r.id).catch(() => ({ customerEmailed: false }));

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge, Empty, Title } from "@/components/admin/server-ui";
 import { MonthCalendar, loadMonthEvents } from "@/components/admin/MonthCalendar";
+import { DayBookings } from "@/components/admin/DayBookings";
 import { bookingsWithWhen } from "@/lib/admin-data";
 import { money } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
@@ -10,7 +11,7 @@ import { cn } from "@/lib/cn";
 export const metadata = { title: "Bookings" };
 const STATUSES = ["pending", "confirmed", "completed", "declined", "cancelled"];
 
-export default async function Bookings({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; kind?: string; view?: string; month?: string }> }) {
+export default async function Bookings({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; kind?: string; view?: string; month?: string; day?: string }> }) {
   const sp = await searchParams;
   const s = await getSettings();
   const tz = s.booking.timezone;
@@ -20,7 +21,8 @@ export default async function Bookings({ searchParams }: { searchParams: Promise
   let body: React.ReactNode;
   if (view === "calendar") {
     const month = /^\d{4}-\d{2}$/.test(sp.month ?? "") ? sp.month! : dateStrIn(new Date(), tz).slice(0, 7);
-    body = <MonthCalendar month={month} tz={tz} events={await loadMonthEvents(month, tz)} basePath="/admin/bookings" extra="&view=calendar" />;
+    const day = /^\d{4}-\d{2}-\d{2}$/.test(sp.day ?? "") ? sp.day! : "";
+    body = (<><MonthCalendar month={month} tz={tz} events={await loadMonthEvents(month, tz)} basePath="/admin/bookings" extra="&view=calendar" day={day} />{day ? <DayBookings day={day} tz={tz} /> : <p className="mt-3 text-sm text-ink/60">Click a date to see all bookings on that day.</p>}</>);
   } else {
     const f: Record<string, any> = {};
     if (sp.status && STATUSES.includes(sp.status)) f.status = sp.status;
@@ -39,7 +41,7 @@ export default async function Bookings({ searchParams }: { searchParams: Promise
               <tr key={b.id} className="hover:bg-lilac/30">
                 <td className="p-3"><Link className="font-semibold text-plum underline" href={`/admin/bookings/${b.id}`}>{b.reference}</Link></td>
                 <td className="p-3">{b.customer_name}<br /><span className="text-xs text-ink/60">{b.customer_email}</span></td>
-                <td className="p-3">{b.kind === "class" ? b.title : "Studio rental"}</td>
+                <td className="p-3">{b.kind === "class" ? b.title : (b.room_name || "Studio") + (b.category ? ` · ${b.category}` : "")}</td>
                 <td className="p-3">{b.at ? fmtDateTime(b.at, tz) : "-"}</td>
                 <td className="p-3">{b.attendees}</td>
                 <td className="p-3">{money(b.total_cents)}</td>

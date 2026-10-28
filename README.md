@@ -42,3 +42,11 @@ Address (and tick "verified"), business hours, social URLs, logo file, real stud
 4. Admin images upload to MongoDB (`stored_uploads`), are resized to WebP and served from `/api/uploads/...`. Vercel limits request bodies to 4.5 MB.
 5. Public pages are cached and expire instantly when the admin saves. Use `npm run build` and `npm start` (dev mode is slower and not cached).
 6. Before turning live bookings on: booking terms, cancellation terms, tax review, a rental price and rental hours (Admin, Website settings).
+
+## Studio VM booking (phase 2)
+- Two rooms (Admin, Rooms): Main Studio and Private Studio, each with its own calendar. Classes are held in the main studio.
+- Public booking page: choose a room, pick a date on the calendar, tap continuous hourly slots. Booked hours show as Booked.
+- Payment is Interac e-transfer. The booking stays Pending until an admin confirms it (Admin, Bookings). The e-transfer email, instructions and the confirmation-email text are edited in Admin, Website settings, Payment and email.
+- Emails (customer and studio on request, customer on confirmation) need SMTP_USER and SMTP_PASS (for example a Gmail app password) or RESEND_API_KEY and EMAIL_FROM.
+- Admin calendars: click any date to list that day's bookings.
+- `npm run db:v2` applies the room, instructor-placeholder and booking-default data to an existing database (safe to re-run).

@@ -17,6 +17,8 @@ export type Settings = {
   social: { instagram: string; facebook: string; tiktok: string; youtube: string; whatsapp: string };
   /** Public business hours (display only). Hidden until published. */
   hours: { published: boolean; days: DayHours[]; note: string };
+  /** Interac e-transfer details shown at checkout, and who is emailed. */
+  payment: { interacEmail: string; instructions: string; notifyEmail: string; confirmInstructions: string };
   copy: {
     heroSub: string; introHeading: string; introBody: string;
     rentalHeading: string; rentalBody: string; closingHeading: string; closingBody: string;
@@ -46,9 +48,9 @@ const day = (enabled: boolean, open = "09:00", close = "21:00"): DayHours => ({ 
 
 export const DEFAULT_SETTINGS: Settings = {
   business: {
-    name: "Studio VM Arts, Wellness & Learning Centre Inc.",
+    name: "Studio VM Arts Wellness and Learning Center Inc.",
     shortName: "Studio VM",
-    tagline: "Own Your Vibe",
+    tagline: "Why Move Repeat",
     supportingLine: "Your Space. Your Passion. Your Vibe.",
     email: "yourstudiovm@gmail.com",
     secondaryEmail: "",
@@ -60,6 +62,12 @@ export const DEFAULT_SETTINGS: Settings = {
   address: { street: "", city: "", region: "", postal: "", country: "", verified: false },
   social: { instagram: "https://www.instagram.com/yourstudiovm/", facebook: "", tiktok: "", youtube: "", whatsapp: "" },
   hours: { published: false, days: Array.from({ length: 7 }, () => day(false)), note: "" },
+  payment: {
+    interacEmail: "yourstudiovm@gmail.com",
+    instructions: "Send your Interac e-transfer to the email address above and include your booking reference in the message. Your booking stays Pending until the studio confirms your payment.",
+    notifyEmail: "",
+    confirmInstructions: "",
+  },
   copy: {
     heroSub: "Move, create, connect. Discover a welcoming space to explore what makes you, you.",
     introHeading: "One room. Endless ways to belong.",
@@ -74,15 +82,15 @@ export const DEFAULT_SETTINGS: Settings = {
   booking: {
     live: false,
     timezone: "America/Toronto",
-    leadTimeHours: 24,
-    bufferBeforeMin: 15,
-    bufferAfterMin: 15,
+    leadTimeHours: 0,
+    bufferBeforeMin: 0,
+    bufferAfterMin: 0,
     minHours: 1,
-    maxHours: 6,
-    slotStepMin: 30,
+    maxHours: 8,
+    slotStepMin: 60,
     maxSlotsPerBooking: 12,
-    rentalMaxAttendees: 12,
-    rentalHours: [day(false), day(true), day(true), day(true), day(true), day(true), day(true)],
+    rentalMaxAttendees: 30,
+    rentalHours: [day(true), day(true), day(true), day(true), day(true), day(true), day(true)],
     regularRateCents: null,
     showRegularRate: false,
     minRateCents: 2500,
@@ -127,7 +135,7 @@ export function mapLinks(s: Settings) {
 }
 
 export function emailConfigured() {
-  return Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
+  return Boolean((process.env.SMTP_USER && process.env.SMTP_PASS) || (process.env.RESEND_API_KEY && process.env.EMAIL_FROM));
 }
 
 /** Everything that must be true before live bookings can be switched on. */

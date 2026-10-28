@@ -5,6 +5,7 @@ import { Reveal } from "@/components/site/motion";
 import { getLiveOffers, getServices } from "@/lib/content";
 import { money } from "@/lib/format";
 import { offerTerms } from "@/lib/pricing";
+import { getRooms } from "@/lib/rooms";
 import { getSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Pricing() {
-  const [s, services, offers] = await Promise.all([getSettings(), getServices(), getLiveOffers()]);
+  const [s, services, offers, rooms] = await Promise.all([getSettings(), getServices(), getLiveOffers(), getRooms()]);
   const b = s.booking;
   const priced = services.filter((x) => x.bookingType === "class" && x.priceCents != null);
   const showRegular = b.showRegularRate && b.regularRateCents != null;
@@ -23,7 +24,20 @@ export default async function Pricing() {
       <PageHero eyebrow="Pricing & offers" title="Clear prices. No surprises." italic={["surprises."]} body="All prices are in Canadian dollars. Classes and studio rental are priced separately." tone="connect" photo={6} />
 
       <section className="mx-auto max-w-[88rem] px-5 pb-20 sm:px-8">
-        <SectionHead eyebrow="Studio rental" title="Hire the room by the hour." italic={["hour."]} />
+        <SectionHead eyebrow="Studio rental" title="Hire a room by the hour." italic={["hour."]} />
+        {rooms.length ? (
+          <ul className="mt-12 grid gap-6 md:grid-cols-2">
+            {rooms.map((r) => (
+              <Reveal as="li" key={r.id} className="rounded-[2rem] border border-plum/20 p-8">
+                <p className="eyebrow">{[r.sizeSqFt ? `${r.sizeSqFt} sq ft` : null, `up to ${r.capacity} people`].filter(Boolean).join(" · ")}</p>
+                <h3 className="display mt-2 text-3xl">{r.name}</h3>
+                <p className="display mt-4 text-5xl">{money(r.priceCents)}<span className="text-xl text-ink/60"> / hour</span></p>
+                {r.priceNote ? <p className="mt-2 text-sm text-ink/70">{r.priceNote}</p> : null}
+                <Link href={`/booking?room=${r.slug}`} className="btn btn-primary mt-6">Book this room</Link>
+              </Reveal>
+            ))}
+          </ul>
+        ) : null}
         {rentalPrices ? (
           <ul className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {showRegular ? (

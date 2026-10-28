@@ -26,7 +26,7 @@ export async function PageHero({
         </div>
         <div className="relative lg:col-span-5">
           <div className="pointer-events-none absolute -right-10 -top-16 w-[22rem] max-w-[80%] opacity-80"><Brush tone="lavender" duration={2.4} /></div>
-          <Mask from="bottom" delay={0.2} className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-t-[999px] rounded-b-[2rem] shadow-[0_40px_80px_-40px_rgba(76,41,79,.55)]">
+          <Mask from="bottom" delay={0.2} className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-t-[999px] rounded-b-[2rem] shadow-[0_40px_80px_-40px_rgba(21,18,14,.55)]">
             <Parallax speed={20} className="h-full w-full">
               <Photo src={image} alt={imageAlt} tone={tone} priority sizes="(min-width:1024px) 34vw, 90vw" />
             </Parallax>

@@ -1,6 +1,7 @@
 import { col, ensureIndexes, insert, nextSort } from "../src/lib/db";
 import { DEFAULT_SETTINGS } from "../src/lib/settings";
 import { slugify } from "../src/lib/format";
+import { applyV2 } from "./v2";
 import { addDays, dateStrIn, zonedToUtc } from "../src/lib/time";
 
 const demo = process.argv.includes("--demo");
@@ -70,6 +71,8 @@ async function main() {
     for (const [question, answer, home] of FAQS) await insert("faqs", { question, answer, status: "published", show_on_home: home, sort_order: await nextSort("faqs") });
     console.log("Seeded FAQs.");
   }
+
+  await applyV2();
 
   if (demo) {
     console.log("Applying DEMO data. Do not use in production.");

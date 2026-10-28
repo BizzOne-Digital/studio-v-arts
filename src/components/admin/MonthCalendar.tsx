@@ -18,11 +18,11 @@ export async function loadMonthEvents(month: string, tz: string): Promise<CalEve
   const bMap = new Map(bks.map((x) => [x.id as string, x]));
   return [
     ...sessions.map((r) => ({ at: r.starts_at as Date, label: titles.get(r.service_id) ?? "Class", kind: "class" as const, status: r.status as string, href: "/admin/schedule" })),
-    ...slotRows.filter((r) => bMap.has(r.booking_id)).map((r) => ({ at: r.starts_at as Date, label: "Rental: " + bMap.get(r.booking_id).customer_name, kind: "rental" as const, status: bMap.get(r.booking_id).status as string, href: "/admin/bookings/" + r.booking_id })),
+    ...slotRows.filter((r) => bMap.has(r.booking_id)).map((r) => ({ at: r.starts_at as Date, label: (bMap.get(r.booking_id).room_name || "Studio") + ": " + bMap.get(r.booking_id).customer_name, kind: "rental" as const, status: bMap.get(r.booking_id).status as string, href: "/admin/bookings/" + r.booking_id })),
   ].filter((e) => dateStrIn(e.at, tz).startsWith(month));
 }
 
-export function MonthCalendar({ month, events, tz, basePath, extra = "" }: { month: string; events: CalEvent[]; tz: string; basePath: string; extra?: string }) {
+export function MonthCalendar({ month, events, tz, basePath, extra = "", day }: { month: string; events: CalEvent[]; tz: string; basePath: string; extra?: string; day?: string }) {
   const [y, m] = month.split("-").map(Number);
   const first = `${y}-${pad(m)}-01`;
   const lead = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
@@ -48,7 +48,7 @@ export function MonthCalendar({ month, events, tz, basePath, extra = "" }: { mon
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => <div key={d} role="columnheader" className="bg-sand p-2 text-center font-semibold">{d}</div>)}
           {cells.map((d, i) => (
             <div key={i} role="gridcell" className={cn("min-h-28 bg-white p-1.5", !d && "bg-ivory", d === today && "ring-2 ring-inset ring-plum")}>
-              {d ? <p className="mb-1 text-xs font-semibold text-ink/60">{+d.slice(8)}</p> : null}
+              {d ? <p className="mb-1"><Link href={`${basePath}?month=${month}${extra}&day=${d}`} aria-label={`Show bookings for ${d}`} aria-current={d === day ? "date" : undefined} className={cn("inline-grid min-h-7 min-w-7 place-items-center rounded-full px-1 text-xs font-semibold hover:bg-lilac", d === day ? "bg-plum text-white hover:bg-plum" : "text-ink/70")}>{+d.slice(8)}</Link></p> : null}
               <ul className="space-y-1">
                 {(d ? by.get(d) ?? [] : []).sort((a, b) => a.at.getTime() - b.at.getTime()).slice(0, 4).map((e, k) => (
                   <li key={k}><Link href={e.href} className={cn("block truncate rounded-md px-1.5 py-0.5 text-xs", e.kind === "class" ? "bg-plum text-white" : "bg-champagne-soft text-plum-deep", e.status === "pending" && "opacity-70 outline-dashed outline-1")}>

@@ -8,7 +8,7 @@ export function Brush({
 }: { className?: string; delay?: number; duration?: number; tone?: "plum" | "lavender" | "champagne" | "ivory"; loop?: boolean }) {
   const id = useId().replace(/:/g, "");
   const reduce = useReducedMotion();
-  const c = { plum: ["#4c294f", "#a77b9e"], lavender: ["#c4aed0", "#e6dbec"], champagne: ["#c9ae82", "#e7d6b8"], ivory: ["#faf7f2", "#e6dbec"] }[tone];
+  const c = { plum: ["#15120e", "#a8893f"], lavender: ["#d4b66a", "#f3ecd9"], champagne: ["#c9a961", "#ecd9a3"], ivory: ["#ffffff", "#f3ecd9"] }[tone];
   const d1 = "M 262 38 C 342 30 398 92 392 176 C 386 268 318 352 218 356 C 118 360 38 292 34 196 C 30 108 94 40 190 34 C 232 31 262 40 286 54";
   const d2 = "M 270 52 C 336 50 380 108 372 182 C 364 260 300 332 214 336 C 128 340 58 282 56 200 C 54 126 108 62 190 56";
   const d3 = "M 238 22 C 318 14 410 84 402 180 C 394 282 320 372 214 372";

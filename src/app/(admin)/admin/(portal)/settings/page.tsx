@@ -1,9 +1,10 @@
 import { ActionButton, AdminForm, Check, Field, ImageField } from "@/components/admin/ui";
 import { Card, Title, Warn } from "@/components/admin/server-ui";
 import { loadOffers } from "@/lib/booking";
+import { col } from "@/lib/db";
 import { mediaSrc } from "@/lib/media";
 import { emailConfigured, getSettings, launchChecklist } from "@/lib/settings";
-import { saveBusiness, saveTerms, setLive } from "../actions";
+import { saveBusiness, savePayments, saveTerms, setLive } from "../actions";
 
 export const metadata = { title: "Website settings" };
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -11,7 +12,8 @@ const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", 
 export default async function Settings() {
   const [s, offers] = await Promise.all([getSettings(), loadOffers()]);
   const b = s.business, a = s.address;
-  const hasPrice = s.booking.regularRateCents != null || offers.some((o) => o.active && (o.kind === "flat_rate" || o.kind === "package"));
+  const roomsWithPrice = await (await col("rooms")).countDocuments({ active: { $ne: false }, price_cents: { $gt: 0 } });
+  const hasPrice = s.booking.regularRateCents != null || offers.some((o) => o.active && (o.kind === "flat_rate" || o.kind === "package")) || roomsWithPrice > 0;
   const list = launchChecklist(s, hasPrice);
   return (
     <>
@@ -23,6 +25,18 @@ export default async function Settings() {
         <div className="mt-3 flex gap-2">
           {s.booking.live ? <ActionButton action={setLive.bind(null, false)}>Turn off</ActionButton> : <ActionButton action={setLive.bind(null, true)} confirm="Enable live bookings on the public website?">Turn on</ActionButton>}
         </div>
+      </Card>
+
+      <Card title="Payment and email" className="mt-6">
+        <AdminForm action={savePayments}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Interac e-transfer email" hint="Shown to customers at checkout and in their emails."><input name="interacEmail" type="email" required defaultValue={s.payment.interacEmail} className="admin-input" /></Field>
+            <Field label="Send booking notifications to" hint="Empty = the contact email."><input name="notifyEmail" type="email" defaultValue={s.payment.notifyEmail} className="admin-input" /></Field>
+            <Field label="Payment instructions (shown at checkout and in the request email)" wide><textarea name="instructions" rows={3} defaultValue={s.payment.instructions} className="admin-input" /></Field>
+            <Field label="Instructions added to the confirmation email" hint="Door access, rules, parking, what to bring. Sent when you confirm a booking." wide><textarea name="confirmInstructions" rows={5} defaultValue={s.payment.confirmInstructions} className="admin-input" /></Field>
+          </div>
+        </AdminForm>
+        <p className="mt-3 text-sm text-ink/65">Email sending is currently <strong>{emailConfigured() ? "connected" : "not connected"}</strong>. {emailConfigured() ? "" : "Add SMTP_USER and SMTP_PASS (for example a Gmail app password) or RESEND_API_KEY and EMAIL_FROM to the server settings to turn it on."}</p>
       </Card>
 
       <Card title="Booking terms" className="mt-6">
@@ -70,7 +84,7 @@ export default async function Settings() {
           <div className="mt-3 space-y-2">
             {s.hours.days.map((d, i) => (
               <div key={i} className="grid grid-cols-[8rem_1fr_1fr] items-center gap-3">
-                <label className="flex min-h-11 items-center gap-2 text-sm font-semibold"><input type="checkbox" name={`hen${i}`} defaultChecked={d.enabled} className="h-5 w-5 accent-[#4c294f]" />{DAYS[i]}</label>
+                <label className="flex min-h-11 items-center gap-2 text-sm font-semibold"><input type="checkbox" name={`hen${i}`} defaultChecked={d.enabled} className="h-5 w-5 accent-[#15120e]" />{DAYS[i]}</label>
                 <input type="time" name={`hopen${i}`} defaultValue={d.open} aria-label={`${DAYS[i]} opens`} className="admin-input" />
                 <input type="time" name={`hclose${i}`} defaultValue={d.close} aria-label={`${DAYS[i]} closes`} className="admin-input" />
               </div>

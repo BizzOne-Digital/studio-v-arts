@@ -39,7 +39,7 @@ export default async function About() {
         <div className="grid gap-14 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <div className="lg:sticky lg:top-28">
-              <Mask from="bottom" className="relative aspect-[4/5] overflow-hidden rounded-t-[999px] rounded-b-[2rem] shadow-[0_40px_80px_-40px_rgba(58,15,53,.55)]">
+              <Mask from="bottom" className="relative aspect-[4/5] overflow-hidden rounded-t-[999px] rounded-b-[2rem] shadow-[0_40px_80px_-40px_rgba(21,18,14,.55)]">
                 <Parallax speed={18} className="h-full"><Photo src={g(6)?.src} alt={g(6)?.alt ?? ""} tone="about" sizes="(min-width:1024px) 40vw, 90vw" /></Parallax>
               </Mask>
               <div className="pointer-events-none absolute -left-8 -top-8 -z-10 w-56 opacity-60"><Brush tone="lavender" /></div>
