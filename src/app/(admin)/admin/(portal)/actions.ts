@@ -263,7 +263,7 @@ export const saveFaq = guard(async (fd) => {
     .safeParse({ q: str(fd, "question"), a: str(fd, "answer"), status: str(fd, "status") });
   if (!p.success) return bad(zfirst(p.error));
   const id = str(fd, "id");
-  const f = { question: p.data.q, answer: p.data.a, status: p.data.status, show_on_home: chk(fd, "home") };
+  const f = { question: p.data.q, answer: p.data.a, status: p.data.status, show_on_home: chk(fd, "home"), category: str(fd, "category").slice(0, 60) || "General" };
   if (id) await upd("faqs", id, f);
   else await insert("faqs", { ...f, sort_order: await nextSort("faqs") });
   return ok("FAQ saved.");
@@ -382,7 +382,7 @@ export const saveBusiness = guard(async (fd) => {
     address: { street: T("street", 120), city: T("city", 80), region: T("region", 60), postal: T("postal", 20), country: T("country", 60), verified: chk(fd, "verified") },
     social: { instagram: p.data.instagram, facebook: p.data.facebook, tiktok: p.data.tiktok, youtube: p.data.youtube, whatsapp: p.data.whatsapp },
     hours: { published: chk(fd, "hoursPublished"), days, note: T("hoursNote", 200) },
-    copy: { heroSub: T("heroSub", 300) || s.copy.heroSub, introHeading: T("introHeading", 120) || s.copy.introHeading, introBody: T("introBody", 800) || s.copy.introBody, rentalHeading: T("rentalHeading", 120) || s.copy.rentalHeading, rentalBody: T("rentalBody", 600) || s.copy.rentalBody, closingHeading: T("closingHeading", 120) || s.copy.closingHeading, closingBody: T("closingBody", 400) || s.copy.closingBody },
+    copy: { heroSub: T("heroSub", 300) || s.copy.heroSub, introHeading: T("introHeading", 120) || s.copy.introHeading, introBody: T("introBody", 800) || s.copy.introBody, rentalHeading: T("rentalHeading", 120) || s.copy.rentalHeading, rentalBody: T("rentalBody", 600) || s.copy.rentalBody, closingHeading: T("closingHeading", 120) || s.copy.closingHeading, closingBody: T("closingBody", 400) || s.copy.closingBody, aboutStory: str(fd, "aboutStory").slice(0, 3000) || s.copy.aboutStory, aboutVision: T("aboutVision", 500) || s.copy.aboutVision },
   });
   if (s.business.logoUrl && s.business.logoUrl !== logoUrl) await deleteUploadByUrl(s.business.logoUrl);
   return ok("Website settings saved.");
@@ -390,7 +390,7 @@ export const saveBusiness = guard(async (fd) => {
 
 export const saveTerms = guard(async (fd) => {
   const s = await getSettings();
-  await saveSettings({ ...s, booking: { ...s.booking, terms: str(fd, "terms").slice(0, 4000), cancellation: str(fd, "cancellation").slice(0, 4000) } });
+  await saveSettings({ ...s, booking: { ...s.booking, terms: str(fd, "terms").slice(0, 4000), cancellation: str(fd, "cancellation").slice(0, 4000), waiver: str(fd, "waiver").slice(0, 12000) } });
   return ok("Terms saved.");
 });
 
@@ -419,6 +419,8 @@ export const saveRoom = guard(async (fd) => {
   if (price == null || price < 0) return bad("Enter the price per hour.");
   const capacity = Number(fd.get("capacity"));
   if (!Number.isInteger(capacity) || capacity < 1) return bad("Maximum people must be 1 or more.");
+  const minHours = Number(fd.get("minHours") || 1);
+  if (!Number.isInteger(minHours) || minHours < 1 || minHours > 12) return bad("Minimum booking must be a whole number of hours (1 to 12).");
   const size = num(fd.get("size"));
   const after = cents(fd.get("afterPrice"));
   const until = str(fd, "priceUntil") || null;
@@ -426,7 +428,7 @@ export const saveRoom = guard(async (fd) => {
   if (after != null && !until) return bad("Add the date the introductory price ends, or clear the later price.");
   const fields: Record<string, unknown> = {
     name, size_sqft: size, price_cents: price, after_price_cents: after, price_until: until, price_note: str(fd, "priceNote").slice(0, 160),
-    capacity, description: str(fd, "description").slice(0, 1200), image_alt: str(fd, "imageAlt").slice(0, 200), active: chk(fd, "active"),
+    capacity, min_hours: minHours, description: str(fd, "description").slice(0, 1200), image_alt: str(fd, "imageAlt").slice(0, 200), active: chk(fd, "active"),
     uses: str(fd, "uses").split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 12), image_url: cleanImageUrl(fd.get("image_url")), updated_at: new Date(),
   };
   const id = str(fd, "id");

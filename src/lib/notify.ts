@@ -3,7 +3,7 @@ import { col } from "./db";
 import { BRAND_FULL } from "./brand";
 import { money } from "./format";
 import { sendMail, studioInbox } from "./mail";
-import { emailConfigured, getSettings } from "./settings";
+import { addressLine, emailConfigured, getSettings, hasAddress } from "./settings";
 import { fmtRange } from "./time";
 
 async function describe(id: string) {
@@ -42,9 +42,17 @@ ${blocks.join("")}
 </div></div></body></html>`;
 }
 
-const summaryRows = (d: NonNullable<Awaited<ReturnType<typeof describe>>>): [string, string][] => [
-  ["Reference", d.b.reference], ["Booking", d.what], ["When", d.when], ["People", String(d.b.attendees)], ["Total", `${money(d.b.total_cents)} CAD`],
-];
+type D = NonNullable<Awaited<ReturnType<typeof describe>>>;
+const hoursOf = (d: D) => (d.b.price_breakdown?.hours as number | undefined) ?? null;
+const summaryRows = (d: D, opts: { paid?: boolean; address?: boolean } = {}): [string, string][] => {
+  const h = hoursOf(d);
+  const rows: [string, string][] = [["Reference", d.b.reference], ["Booking", d.what], ["When", d.when]];
+  if (d.b.kind === "rental" && h) rows.push(["Duration", `${h} hour${h === 1 ? "" : "s"}`]);
+  rows.push(["People", String(d.b.attendees)], ["Total", `${money(d.b.total_cents)} CAD`]);
+  if (opts.paid) rows.push(["Payment", "Received by Interac e-transfer"]);
+  if (opts.address && hasAddress(d.s.address)) rows.push(["Studio address", addressLine(d.s.address)]);
+  return rows;
+};
 
 /** Request received: acknowledgement + payment details to the customer, and a notification to the studio. */
 export async function notifyNewBooking(id: string): Promise<{ customerEmailed: boolean }> {
@@ -56,7 +64,7 @@ export async function notifyNewBooking(id: string): Promise<{ customerEmailed: b
   const customerEmailed = await sendMail(
     b.customer_email,
     `We received your booking request (${b.reference})`,
-    `Hello ${b.customer_name},\n\nThank you for your booking request. It is Pending until we confirm your payment, and we will email you again once it is confirmed.\n\nReference: ${b.reference}\nBooking: ${d.what}\nWhen:\n${d.when}\nPeople: ${b.attendees}\nTotal: ${money(b.total_cents)} CAD\n\n${pay}\n\n${BRAND_FULL}`,
+    `Hello ${b.customer_name},\n\nThank you for your booking request. It is Pending until we confirm your payment, and we will email you again once it is confirmed.\n\nReference: ${b.reference}\nBooking: ${d.what}\nWhen:\n${d.when}${hoursOf(d) ? `\nDuration: ${hoursOf(d)} hour${hoursOf(d) === 1 ? "" : "s"}` : ""}\nPeople: ${b.attendees}\nTotal: ${money(b.total_cents)} CAD\n\n${pay}\n\n${BRAND_FULL}`,
     layout("We received your booking request", summaryRows(d), [
       `<div style="margin-top:18px;padding:14px 16px;background:#faf3df;border-radius:10px;font-size:14px"><strong>Pay by Interac e-transfer</strong><br>Send to <strong>${esc(s.payment.interacEmail)}</strong> and include <strong>${esc(b.reference)}</strong> in the message.${paras(s.payment.instructions)}</div>`,
       `<p style="font-size:13px;color:#6b665c;margin-top:16px">Your booking is Pending until the studio confirms your payment. You will receive another email when it is confirmed.</p>`,
@@ -88,10 +96,11 @@ export async function notifyStatus(id: string, status: string): Promise<boolean>
   return sendMail(
     b.customer_email,
     `Booking ${status}: ${b.reference}`,
-    `Hello ${b.customer_name},\n\n${line}\n\nReference: ${b.reference}\nBooking: ${d.what}\nWhen:\n${d.when}${extra ? `\n\n${extra}` : ""}\n\n${BRAND_FULL}`,
-    layout(status === "confirmed" ? "Your booking is confirmed" : `Booking ${status}`, summaryRows(d), [
+    `Hello ${b.customer_name},\n\n${line}\n\nReference: ${b.reference}\nBooking: ${d.what}\nWhen:\n${d.when}${hoursOf(d) ? `\nDuration: ${hoursOf(d)} hour(s)` : ""}${status === "confirmed" ? "\nPayment: received by Interac e-transfer" : ""}${status === "confirmed" && hasAddress(s.address) ? `\nStudio address: ${addressLine(s.address)}` : ""}${extra ? `\n\n${extra}` : ""}${status === "confirmed" && s.booking.cancellation.trim() ? `\n\nCancellation policy:\n${s.booking.cancellation}` : ""}\n\n${BRAND_FULL}`,
+    layout(status === "confirmed" ? "Your booking is confirmed" : `Booking ${status}`, summaryRows(d, { paid: status === "confirmed", address: true }), [
       `<p style="margin-top:16px;font-size:14px">${esc(line)}</p>`,
       extra ? `<div style="margin-top:14px;padding:14px 16px;background:#faf3df;border-radius:10px;font-size:14px"><strong>Please note</strong>${paras(extra)}</div>` : "",
+      status === "confirmed" && s.booking.cancellation.trim() ? `<div style="margin-top:14px;font-size:13px;color:#6b665c"><strong>Cancellation policy</strong>${paras(s.booking.cancellation)}</div>` : "",
     ]),
   );
 }

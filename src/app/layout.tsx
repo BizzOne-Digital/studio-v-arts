@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: "Studio VM | Own Your Vibe", template: "%s | Studio VM" },
   description: "Dance, yoga, creative workshops, learning and small celebrations. Book a class or rent the studio.",
-  openGraph: { siteName: "Studio VM Arts Wellness and Learning Center Inc.", type: "website", locale: "en_CA", images: [{ url: "/hero.webp", width: 2000, height: 1125, alt: "Studio VM" }] },
+  openGraph: { siteName: "STUDIO VM Arts, Wellness & Learning Centre Inc.", type: "website", locale: "en_CA", images: [{ url: "/hero.webp", width: 2000, height: 1125, alt: "Studio VM" }] },
 };
 export const viewport: Viewport = { themeColor: "#ffffff", width: "device-width", initialScale: 1 };
 

@@ -13,7 +13,7 @@ export type Result<T> = ({ ok: true } & T) | Fail;
 const fail = (error: string, field?: string): Fail => ({ ok: false, error, field });
 
 /** A bookable space. Each room has its own calendar: a booking in one room never blocks another. */
-type RoomDoc = { id: string; name: string; price_cents: number; after_price_cents?: number | null; price_until?: string | null; capacity: number; active?: boolean };
+type RoomDoc = { id: string; name: string; price_cents: number; after_price_cents?: number | null; price_until?: string | null; capacity: number; min_hours?: number; active?: boolean };
 type RoomRef = { id: string; mainId: string };
 
 async function findRoom(idOrSlug: string, ses?: ClientSession): Promise<RoomDoc | null> {
@@ -132,6 +132,8 @@ async function validateAndPrice(
   for (const sl of slots) {
     const r = resolveSlot(sl, s, blocked, now, { skipLead: opts.skipLead });
     if (!r.ok) return r;
+    const need = (room.min_hours ?? 1) * 60;
+    if (sl.minutes < need) return fail(`${room.name} needs a minimum booking of ${need / 60} hour${need === 60 ? "" : "s"}.`, "slot");
     ranges.push({ start: r.start, end: r.end });
   }
   const sorted = [...ranges].sort((a, c) => a.start.getTime() - c.start.getTime());
@@ -179,9 +181,13 @@ async function newReference(ses: ClientSession) {
 
 export type Customer = { name: string; email: string; phone: string; notes: string };
 
-export async function createRentalBooking(c: Customer, slots: SlotInput[], attendees: number, reason: string, roomIdOrSlug: string, category: string) {
+/** Short fingerprint of the waiver text a customer accepted, stored on the booking. */
+const waiverVersion = (s: Settings) => crypto.createHash("sha1").update(s.booking.waiver ?? "").digest("hex").slice(0, 8);
+
+export async function createRentalBooking(c: Customer, slots: SlotInput[], attendees: number, reason: string, roomIdOrSlug: string, category: string, agreed: boolean) {
   const s = await getSettings();
   if (!s.booking.live) return fail("Online booking is not open yet.");
+  if (agreed !== true) return fail("Please accept the booking agreement.", "agreed");
   const mainId = (await mainRoomId()) ?? "";
   return tx(async (ses): Promise<Result<{ id: string; reference: string; totalCents: number; subtotalCents: number; first: Date; roomName: string }>> => {
     await lockStudio(ses);
@@ -196,7 +202,7 @@ export async function createRentalBooking(c: Customer, slots: SlotInput[], atten
     const b = await insert("bookings", {
       reference, kind: "rental", status: "pending", payment_status: "unpaid", customer_name: c.name, customer_email: c.email,
       customer_phone: c.phone, attendees, session_id: null, service_id: null, room_id: room.id, room_name: room.name, category,
-      activity: reason, customer_notes: c.notes, internal_notes: "",
+      activity: reason, customer_notes: c.notes, internal_notes: "", waiver_accepted_at: now, waiver_version: waiverVersion(s),
       subtotal_cents: r.quote.subtotalCents, tax_cents: t.taxCents, total_cents: t.totalCents, currency: "CAD", offer_id: r.quote.offerId,
       price_breakdown: { label: r.quote.label, hours: r.quote.hours, perHourCents: r.quote.perHourCents },
       updated_at: now, status_changed_at: now,
@@ -214,9 +220,10 @@ export async function seatsLeft(ses: ClientSession | undefined, sessionId: strin
   return capacity - (r[0]?.n ?? 0);
 }
 
-export async function createClassBooking(c: Customer, sessionId: string, attendees: number) {
+export async function createClassBooking(c: Customer, sessionId: string, attendees: number, agreed: boolean) {
   const s = await getSettings();
   if (!s.booking.live) return fail("Online booking is not open yet.");
+  if (agreed !== true) return fail("Please accept the booking agreement.", "agreed");
   if (!Number.isInteger(attendees) || attendees < 1) return fail("Enter the number of attendees.", "attendees");
   return tx(async (ses): Promise<Result<{ id: string; reference: string; totalCents: number; subtotalCents: number; first: Date; title: string }>> => {
     await lockStudio(ses);
@@ -236,7 +243,7 @@ export async function createClassBooking(c: Customer, sessionId: string, attende
     const now = new Date();
     const b = await insert("bookings", {
       reference, kind: "class", status: "pending", payment_status: "unpaid", customer_name: c.name, customer_email: c.email, customer_phone: c.phone,
-      attendees, session_id: sessionId, service_id: svc.id, room_id: null, room_name: "", category: "", activity: "", customer_notes: c.notes, internal_notes: "",
+      attendees, session_id: sessionId, service_id: svc.id, room_id: null, room_name: "", category: "", activity: "", customer_notes: c.notes, internal_notes: "", waiver_accepted_at: now, waiver_version: waiverVersion(s),
       subtotal_cents: sub, tax_cents: t.taxCents, total_cents: t.totalCents, currency: "CAD", offer_id: null,
       price_breakdown: { label: "Class", unitCents: price }, updated_at: now, status_changed_at: now,
     }, ses);

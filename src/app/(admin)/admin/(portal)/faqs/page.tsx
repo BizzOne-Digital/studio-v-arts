@@ -16,6 +16,7 @@ export default async function Faqs() {
             <Field label="Question" wide><input name="question" required className="admin-input" /></Field>
             <Field label="Answer" wide><textarea name="answer" rows={3} required className="admin-input" /></Field>
             <Field label="Status"><select name="status" defaultValue="published" className="admin-input"><option value="published">Published</option><option value="draft">Draft</option></select></Field>
+            <Field label="Group (heading on the FAQ page)"><input name="category" defaultValue="General" className="admin-input" /></Field>
             <Check name="home" label="Show on Home" />
           </div>
         </AdminForm>
@@ -31,6 +32,7 @@ export default async function Faqs() {
                   <Field label="Question" wide><input name="question" defaultValue={r.question} required className="admin-input" /></Field>
                   <Field label="Answer" wide><textarea name="answer" rows={3} defaultValue={r.answer} required className="admin-input" /></Field>
                   <Field label="Status"><select name="status" defaultValue={r.status} className="admin-input"><option value="published">Published</option><option value="draft">Draft</option></select></Field>
+                  <Field label="Group (heading on the FAQ page)"><input name="category" defaultValue={r.category ?? "General"} className="admin-input" /></Field>
                   <Check name="home" label="Show on Home" defaultChecked={r.show_on_home} />
                 </div>
               </AdminForm>

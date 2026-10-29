@@ -43,6 +43,7 @@ export default async function Settings() {
         <AdminForm action={saveTerms}>
           <Field label="Booking terms" hint="Shown on Pricing and in the booking summary. Write your own; nothing is pre-filled."><textarea name="terms" rows={5} defaultValue={s.booking.terms} className="admin-input" /></Field>
           <Field label="Cancellation terms"><textarea name="cancellation" rows={5} defaultValue={s.booking.cancellation} className="admin-input" /></Field>
+          <Field label="Booking Agreement & Liability Waiver" hint="Customers must scroll to the end of this text and tick I AGREE before they can send a booking. Have it reviewed by your own legal adviser."><textarea name="waiver" rows={14} defaultValue={s.booking.waiver} className="admin-input" /></Field>
         </AdminForm>
         <p className="mt-2 text-xs text-ink/60">Tax is configured under Pricing &amp; offers.</p>
       </Card>
@@ -100,6 +101,8 @@ export default async function Settings() {
             <Field label="Introduction text"><textarea name="introBody" rows={3} defaultValue={s.copy.introBody} className="admin-input" /></Field>
             <Field label="Rental heading"><input name="rentalHeading" defaultValue={s.copy.rentalHeading} className="admin-input" /></Field>
             <Field label="Rental text"><textarea name="rentalBody" rows={3} defaultValue={s.copy.rentalBody} className="admin-input" /></Field>
+            <Field label="About page: our story (blank line between paragraphs)"><textarea name="aboutStory" rows={6} defaultValue={s.copy.aboutStory} className="admin-input" /></Field>
+            <Field label="About page: vision quote"><textarea name="aboutVision" rows={2} defaultValue={s.copy.aboutVision} className="admin-input" /></Field>
             <Field label="Closing call-to-action heading"><input name="closingHeading" defaultValue={s.copy.closingHeading} className="admin-input" /></Field>
             <Field label="Closing call-to-action text"><textarea name="closingBody" rows={2} defaultValue={s.copy.closingBody} className="admin-input" /></Field>
           </div>

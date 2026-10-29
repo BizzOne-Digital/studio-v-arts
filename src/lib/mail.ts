@@ -2,6 +2,9 @@ import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
 import { emailConfigured, getSettings } from "./settings";
 
+/** Test hook: with EMAIL_TEST_JSON set, messages are captured here instead of being sent. */
+export const testOutbox: { to: string; subject: string; text: string; html?: string }[] = [];
+
 let smtp: Transporter | null = null;
 function transport() {
   smtp ??= nodemailer.createTransport({
@@ -20,6 +23,7 @@ function transport() {
 export async function sendMail(to: string, subject: string, text: string, html?: string): Promise<boolean> {
   if (!emailConfigured() || !to) return false;
   const from = process.env.EMAIL_FROM || process.env.SMTP_USER;
+  if (process.env.EMAIL_TEST_JSON) { testOutbox.push({ to, subject, text, html }); return true; }
   try {
     if (process.env.SMTP_USER && process.env.SMTP_PASS) {
       await transport().sendMail({ from, to, subject, text, html });

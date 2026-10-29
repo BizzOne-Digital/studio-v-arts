@@ -6,13 +6,13 @@ import { mediaSrc } from "./media";
 export type Room = {
   id: string; slug: string; name: string; description: string; sizeSqFt: number | null;
   priceCents: number; afterPriceCents: number | null; priceUntil: string | null; priceNote: string;
-  capacity: number; uses: string[]; image: string | null; imageAlt: string; active: boolean;
+  capacity: number; minHours: number; uses: string[]; image: string | null; imageAlt: string; active: boolean;
 };
 
 export const mapRoom = (r: any): Room => ({
   id: r.id, slug: r.slug, name: r.name, description: r.description ?? "", sizeSqFt: r.size_sqft ?? null,
   priceCents: r.price_cents, afterPriceCents: r.after_price_cents ?? null, priceUntil: r.price_until ?? null, priceNote: r.price_note ?? "",
-  capacity: r.capacity, uses: r.uses ?? [], image: r.image_url || mediaSrc(r.image_id), imageAlt: r.image_alt ?? "", active: r.active !== false,
+  capacity: r.capacity, minHours: r.min_hours ?? 1, uses: r.uses ?? [], image: r.image_url || mediaSrc(r.image_id), imageAlt: r.image_alt ?? "", active: r.active !== false,
 });
 
 async function loadRooms(): Promise<Room[]> {

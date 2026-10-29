@@ -35,10 +35,10 @@ export async function quoteAction(slots: SlotInput[], roomId: string) {
 }
 
 export async function submitClassBooking(input: unknown): Promise<BookingResult> {
-  const p = customer.extend({ sessionId: z.string().uuid(), attendees: z.number().int().min(1).max(50) }).safeParse(input);
+  const p = customer.extend({ sessionId: z.string().uuid(), attendees: z.number().int().min(1).max(50), agreed: z.literal(true, "Please accept the booking agreement.") }).safeParse(input);
   if (!p.success) return { ok: false, error: "Please check the highlighted fields.", fields: flatten(p.error) };
   if (!throttle(`book:${await clientIp()}`, 8, 10 * 60_000)) return { ok: false, error: "Too many requests. Please wait a few minutes and try again." };
-  const r = await createClassBooking({ name: p.data.name, email: p.data.email, phone: p.data.phone, notes: p.data.notes }, p.data.sessionId, p.data.attendees);
+  const r = await createClassBooking({ name: p.data.name, email: p.data.email, phone: p.data.phone, notes: p.data.notes }, p.data.sessionId, p.data.attendees, p.data.agreed);
   if (!r.ok) return { ok: false, error: r.error, fields: r.field ? { [r.field]: r.error } : undefined };
   updateTag("bookings");
   const n = await notifyNewBooking(r.id).catch(() => ({ customerEmailed: false }));
@@ -51,11 +51,12 @@ export async function submitRentalBooking(input: unknown): Promise<BookingResult
     attendees: z.number().int().min(1).max(200),
     roomId: z.string().min(1, "Choose a room.").max(80),
     category: z.string().trim().min(2, "Choose what the booking is for.").max(60),
+    agreed: z.literal(true, "Please accept the booking agreement."),
     activity: z.string().trim().min(3, "Tell us the reason for your booking.").max(300),
   }).safeParse(input);
   if (!p.success) return { ok: false, error: "Please check the highlighted fields.", fields: flatten(p.error) };
   if (!throttle(`book:${await clientIp()}`, 8, 10 * 60_000)) return { ok: false, error: "Too many requests. Please wait a few minutes and try again." };
-  const r = await createRentalBooking({ name: p.data.name, email: p.data.email, phone: p.data.phone, notes: p.data.notes }, p.data.slots, p.data.attendees, p.data.activity, p.data.roomId, p.data.category);
+  const r = await createRentalBooking({ name: p.data.name, email: p.data.email, phone: p.data.phone, notes: p.data.notes }, p.data.slots, p.data.attendees, p.data.activity, p.data.roomId, p.data.category, p.data.agreed);
   if (!r.ok) return { ok: false, error: r.error, fields: r.field ? { [r.field]: r.error } : undefined };
   updateTag("bookings");
   const n = await notifyNewBooking(r.id).catch(() => ({ customerEmailed: false }));

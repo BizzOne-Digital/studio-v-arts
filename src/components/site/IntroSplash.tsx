@@ -83,7 +83,7 @@ export function IntroSplash({ name, logoSrc, tagline }: { name: string; logoSrc:
           animate={{ opacity: moving ? 0 : 1, y: moving ? -10 : 0 }}
           transition={{ duration: 0.5 }}
         >
-          {tagline}.
+          {tagline.replace(/\.$/, "")}.
         </motion.p>
       </div>
     </motion.div>

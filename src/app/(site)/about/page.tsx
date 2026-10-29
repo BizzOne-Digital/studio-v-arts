@@ -50,14 +50,15 @@ export default async function About() {
             <p className="eyebrow">Our story</p>
             <SplitText text="One room with room for everyone." italicWords={["everyone."]} className="display mt-4 text-[clamp(2rem,4.2vw,3.5rem)]" />
             <div className="mt-8 space-y-6 text-lg text-ink/80">
-              <Reveal><p className="first-letter:float-left first-letter:mr-3 first-letter:font-[family-name:var(--font-playfair)] first-letter:text-7xl first-letter:leading-[0.8] first-letter:text-plum">
-                Studio VM brings creativity, wellness, learning and celebration together under one roof. It is a welcoming space to explore your interests, build confidence, meet people and make memories.
-              </p></Reveal>
-              <Reveal delay={0.1}><p>Dancers and chess players, painters and parents, children, seniors and curious beginners all share the same floor. Some come for a class. Some hire the space for their own. Many come for both.</p></Reveal>
+              {s.copy.aboutStory.split(/\n\s*\n/).filter(Boolean).map((para, i) => (
+                <Reveal key={i} delay={i * 0.1}>
+                  <p className={i === 0 ? "first-letter:float-left first-letter:mr-3 first-letter:font-[family-name:var(--font-playfair)] first-letter:text-7xl first-letter:leading-[0.8] first-letter:text-plum" : undefined}>{para}</p>
+                </Reveal>
+              ))}
             </div>
             <Reveal delay={0.15}>
               <figure className="mt-12 border-l-2 border-champagne pl-6">
-                <blockquote className="display text-2xl leading-snug text-plum sm:text-3xl">To create a welcoming and inspiring community where every individual feels empowered to explore, grow, connect, and celebrate life.</blockquote>
+                <blockquote className="display text-2xl leading-snug text-plum sm:text-3xl">{s.copy.aboutVision}</blockquote>
                 <figcaption className="eyebrow mt-4">Our vision</figcaption>
               </figure>
             </Reveal>

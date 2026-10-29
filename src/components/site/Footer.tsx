@@ -16,7 +16,7 @@ export function Footer({ s, logoSrc }: { s: Settings; logoSrc: string | null }) 
       <div className="pointer-events-none absolute -right-24 -top-24 w-[34rem] opacity-30"><Brush tone="lavender" delay={0} duration={2.5} /></div>
       <div className="relative mx-auto max-w-[88rem] px-5 pb-10 pt-24 sm:px-8">
         <p className="display text-[clamp(2.4rem,7vw,6rem)] leading-[0.9]">
-          {b.tagline}<span className="text-champagne">.</span>
+          {b.tagline.replace(/\.$/, "")}<span className="text-champagne">.</span>
         </p>
         <p className="hand mt-2 text-2xl text-lavender">{b.supportingLine}</p>
 

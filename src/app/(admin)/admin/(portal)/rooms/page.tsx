@@ -16,6 +16,7 @@ function RoomForm({ r }: { r?: any }) {
         <Field label="Size (sq ft)"><input name="size" type="number" min={1} defaultValue={r?.size_sqft ?? ""} className="admin-input" /></Field>
         <Field label="Price per hour (CAD)"><input name="price" required inputMode="decimal" defaultValue={r ? r.price_cents / 100 : ""} className="admin-input" /></Field>
         <Field label="Maximum people"><input name="capacity" required type="number" min={1} defaultValue={r?.capacity ?? ""} className="admin-input" /></Field>
+        <Field label="Minimum booking (hours)"><input name="minHours" required type="number" min={1} max={12} defaultValue={r?.min_hours ?? 1} className="admin-input" /></Field>
         <Field label="Price note (shown beside the price)" hint="For example: introductory rate for the first 6 months." wide><input name="priceNote" defaultValue={r?.price_note} className="admin-input" /></Field>
         <Field label="Price after the introductory period (CAD)" hint="Optional. Used automatically after the end date below."><input name="afterPrice" inputMode="decimal" defaultValue={r?.after_price_cents != null ? r.after_price_cents / 100 : ""} className="admin-input" /></Field>
         <Field label="Introductory price ends on" hint="Optional date. Leave empty if the price has no end date."><input name="priceUntil" type="date" defaultValue={r?.price_until ?? ""} className="admin-input" /></Field>

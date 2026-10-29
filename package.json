@@ -12,7 +12,9 @@
     "db:seed:demo": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/seed.ts --demo",
     "db:admin": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/create-admin.ts",
     "lint": "eslint .",
-    "db:v2": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/v2.ts"
+    "db:v2": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/v2.ts",
+    "db:v3": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/v3.ts",
+    "test:emails": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/test-emails.ts"
   },
   "dependencies": {
     "jose": "^6.2.12",

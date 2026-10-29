@@ -38,7 +38,7 @@ export default async function StudioRental() {
               <Reveal as="li" key={r.id} delay={i * 0.1} className="overflow-hidden rounded-[2rem] border border-plum/15 bg-white">
                 <div className="aspect-[16/10]"><Photo src={r.image} alt={r.imageAlt || r.name} tone="rental" seed={i} sizes="(min-width:1024px) 45vw, 95vw" /></div>
                 <div className="p-7 sm:p-9">
-                  <p className="eyebrow">{[r.sizeSqFt ? `${r.sizeSqFt} sq ft` : null, `Up to ${r.capacity} people`].filter(Boolean).join(" · ")}</p>
+                  <p className="eyebrow">{[r.sizeSqFt ? `${r.sizeSqFt} sq ft` : null, `Up to ${r.capacity} people`, `Minimum ${r.minHours} hour${r.minHours === 1 ? "" : "s"}`].filter(Boolean).join(" · ")}</p>
                   <h2 className="display mt-2 text-3xl sm:text-4xl">{r.name}</h2>
                   <p className="mt-3 text-2xl font-semibold text-plum">{money(r.priceCents)}<span className="text-base font-normal text-ink/60"> / hour</span></p>
                   {r.priceNote ? <p className="mt-1 text-sm text-ink/65">{r.priceNote}</p> : null}
@@ -50,6 +50,13 @@ export default async function StudioRental() {
             ))}
           </ul>
         )}
+        <Reveal className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-[2rem] bg-plum p-8 text-ivory on-dark">
+          <div>
+            <h3 className="display text-2xl sm:text-3xl">Need a longer or recurring rental?</h3>
+            <p className="mt-1 text-ivory/80">Book several hours in one go, or contact us about weekly and long-term rentals.</p>
+          </div>
+          <Link href="/contact?topic=Longer%20or%20recurring%20studio%20rental" className="btn btn-light">Contact us</Link>
+        </Reveal>
         <div className="mt-10 grid gap-5 md:grid-cols-2">
           <Reveal className="rounded-[2rem] bg-sand p-8">
             <h3 className="display text-3xl">Opening hours for bookings</h3>
@@ -63,7 +70,7 @@ export default async function StudioRental() {
           <Reveal delay={0.1} className="rounded-[2rem] bg-lilac p-8">
             <h3 className="display text-3xl">Good for</h3>
             <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-              {["Dance classes", "Workshops", "Fitness", "Rehearsal", "Birthday events"].map((x) => <li key={x} className="flex items-center gap-2"><span aria-hidden className="h-2 w-2 rounded-full bg-champagne" />{x}</li>)}
+              {["Dance classes", "Workshops", "Fitness", "Rehearsal", "Private practice"].map((x) => <li key={x} className="flex items-center gap-2"><span aria-hidden className="h-2 w-2 rounded-full bg-champagne" />{x}</li>)}
             </ul>
           </Reveal>
         </div>

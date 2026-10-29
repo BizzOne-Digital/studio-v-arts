@@ -66,7 +66,7 @@ async function loadTestimonials() {
 
 async function loadFaqs(homeOnly = false) {
   const rows = await (await col("faqs")).find({ status: "published", ...(homeOnly ? { show_on_home: true } : {}) }).sort({ sort_order: 1, created_at: 1 }).toArray();
-  return rows.map((r) => ({ id: r.id as string, question: r.question as string, answer: r.answer as string }));
+  return rows.map((r) => ({ id: r.id as string, question: r.question as string, answer: r.answer as string, category: (r.category as string) || "General" }));
 }
 
 async function loadTeam() {

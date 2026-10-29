@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { cached } from "./cache";
 import { col } from "./db";
+import { DEFAULT_WAIVER } from "./waiver";
 
 export type DayHours = { enabled: boolean; open: string; close: string };
 
@@ -22,6 +23,7 @@ export type Settings = {
   copy: {
     heroSub: string; introHeading: string; introBody: string;
     rentalHeading: string; rentalBody: string; closingHeading: string; closingBody: string;
+    aboutStory: string; aboutVision: string;
   };
   booking: {
     live: boolean;
@@ -39,6 +41,7 @@ export type Settings = {
     showRegularRate: boolean;
     minRateCents: number;
     terms: string;
+    waiver: string;
     cancellation: string;
     tax: { configured: boolean; enabled: boolean; ratePct: number; label: string };
   };
@@ -48,9 +51,9 @@ const day = (enabled: boolean, open = "09:00", close = "21:00"): DayHours => ({ 
 
 export const DEFAULT_SETTINGS: Settings = {
   business: {
-    name: "Studio VM Arts Wellness and Learning Center Inc.",
+    name: "STUDIO VM Arts, Wellness & Learning Centre Inc.",
     shortName: "Studio VM",
-    tagline: "Why Move Repeat",
+    tagline: "Vibe. Move. Repeat.",
     supportingLine: "Your Space. Your Passion. Your Vibe.",
     email: "yourstudiovm@gmail.com",
     secondaryEmail: "",
@@ -78,6 +81,9 @@ export const DEFAULT_SETTINGS: Settings = {
       "Hire the studio for your own class, workshop or small gathering. Approximately 600 sq ft of flexible, light-filled space, booked by the hour.",
     closingHeading: "Ready to own your vibe?",
     closingBody: "Pick a class or reserve the studio. Every request is reviewed personally and confirmed by our team.",
+    aboutStory:
+      "Studio VM brings creativity, wellness, learning and celebration together under one roof. It is a welcoming space to explore your interests, build confidence, meet people and make memories.\n\nDancers and chess players, painters and parents, children, seniors and curious beginners all share the same floor. Some come for a class. Some hire the space for their own. Many come for both.",
+    aboutVision: "To create a welcoming and inspiring community where every individual feels empowered to explore, grow, connect, and celebrate life.",
   },
   booking: {
     live: false,
@@ -89,12 +95,13 @@ export const DEFAULT_SETTINGS: Settings = {
     maxHours: 8,
     slotStepMin: 60,
     maxSlotsPerBooking: 12,
-    rentalMaxAttendees: 30,
-    rentalHours: [day(true), day(true), day(true), day(true), day(true), day(true), day(true)],
+    rentalMaxAttendees: 25,
+    rentalHours: Array.from({ length: 7 }, () => day(true, "08:00", "22:00")),
     regularRateCents: null,
     showRegularRate: false,
     minRateCents: 2500,
     terms: "",
+    waiver: DEFAULT_WAIVER,
     cancellation: "",
     tax: { configured: false, enabled: false, ratePct: 0, label: "" },
   },

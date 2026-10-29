@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { quoteAction, submitClassBooking, submitRentalBooking, type BookingResult, type FieldErrors } from "@/app/(site)/actions";
 import { cn } from "@/lib/cn";
 import { money } from "@/lib/format";
@@ -13,7 +13,7 @@ export type SessionView = {
   seatsLeft: number; audience: string; serviceSlug: string;
 };
 export type RoomView = {
-  id: string; slug: string; name: string; sizeSqFt: number | null; priceCents: number; priceNote: string; capacity: number;
+  id: string; slug: string; name: string; sizeSqFt: number | null; minHours: number; priceCents: number; priceNote: string; capacity: number;
   uses: string[]; image: string | null; imageAlt: string; description: string;
 };
 export type RentalRules = { minHours: number; maxHours: number; stepMin: number };
@@ -88,7 +88,7 @@ function Calendar({ month, setMonth, value, onPick, disabled, today }: {
 }
 
 export function BookingFlow(p: {
-  live: boolean; tz: string; terms: string; cancellation: string; taxNote: string; today: string;
+  live: boolean; tz: string; terms: string; waiver: string; cancellation: string; taxNote: string; today: string;
   sessions: SessionView[]; initialMode: "class" | "rental"; initialSession?: string; serviceSlug?: string;
   rooms: RoomView[]; initialRoom?: string; rules: RentalRules; openDays: boolean[]; blocked: { s: string; e: string }[];
   categories: string[]; pay: Pay; emailOn: boolean;
@@ -104,6 +104,8 @@ export function BookingFlow(p: {
   const [sel, setSel] = useState<[number, number] | null>(null);
   const [d, setD] = useState({ name: "", email: "", phone: "", notes: "", attendees: 1, activity: "", category: "" });
   const [agree, setAgree] = useState(false);
+  const [readAll, setReadAll] = useState(false);
+  const waiverBox = useRef<HTMLDivElement>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -117,10 +119,24 @@ export function BookingFlow(p: {
   const chosen = p.sessions.find((s) => s.id === sessionId);
   const steps = mode === "class" ? ["Choose class", "Your details", "Review"] : ["Room & time", "Your details", "Review & pay"];
   const set = (k: keyof typeof d, v: string | number) => setD((o) => ({ ...o, [k]: v }));
+  // The waiver must be scrolled to the end before "I AGREE" can be ticked.
+  const checkScrolled = () => {
+    const el = waiverBox.current;
+    if (el && el.scrollTop + el.clientHeight >= el.scrollHeight - 8) setReadAll(true);
+  };
+  useEffect(() => {
+    if (step !== 2) return;
+    const id = requestAnimationFrame(() => {
+      const el = waiverBox.current;
+      if (el && el.scrollHeight <= el.clientHeight + 8) setReadAll(true);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [step]);
   const goStep = (n: number) => { setStep(n); requestAnimationFrame(() => heading.current?.focus()); };
 
   const maxSlots = Math.floor((p.rules.maxHours * 60) / p.rules.stepMin);
-  const minSlots = Math.ceil((p.rules.minHours * 60) / p.rules.stepMin);
+  const roomMin = room?.minHours ?? p.rules.minHours;
+  const minSlots = Math.ceil((Math.max(roomMin, p.rules.minHours) * 60) / p.rules.stepMin);
   const horizon = addDays(p.today, 365);
   const dateOff = (x: string) => x < p.today || x > horizon || !p.openDays[weekdayOf(x)] || p.blocked.some((b) => x >= b.s && x <= b.e);
 
@@ -141,7 +157,15 @@ export function BookingFlow(p: {
   const tapSlot = (i: number) => {
     if (!day) return;
     const s = day.slots;
-    if (!sel || sel[0] !== sel[1]) return setSel([i, i]);
+    if (!sel) return setSel([i, i]);
+    if (sel[0] !== sel[1]) {
+      // an hour right next to the chosen block extends it; anything else starts a new selection
+      if (i === sel[1] + 1 || i === sel[0] - 1) {
+        const a = Math.min(sel[0], i), b = Math.max(sel[1], i);
+        if (s.slice(a, b + 1).every((x) => x.state === "free") && b - a + 1 <= maxSlots) return setSel([a, b]);
+      }
+      return setSel([i, i]);
+    }
     const [a, b] = [Math.min(sel[0], i), Math.max(sel[0], i)];
     const ok = s.slice(a, b + 1).every((x) => x.state === "free") && b - a + 1 <= maxSlots;
     if (!ok) return setSel([i, i]);
@@ -180,7 +204,7 @@ export function BookingFlow(p: {
         if (!room) return setFormError("Choose a room.");
         if (!date) return setFormError("Choose a date.");
         if (!sel) return setFormError("Choose your time on the calendar.");
-        if (sel[1] - sel[0] + 1 < minSlots) return setFormError(`Please book at least ${p.rules.minHours} hour${p.rules.minHours === 1 ? "" : "s"}.`);
+        if (sel[1] - sel[0] + 1 < minSlots) return setFormError(`${room.name} needs a minimum booking of ${roomMin} hour${roomMin === 1 ? "" : "s"}.`);
       }
     }
     if (step === 1 && !validateDetails()) return;
@@ -193,8 +217,8 @@ export function BookingFlow(p: {
     try {
       const base = { name: d.name, email: d.email, phone: d.phone, notes: d.notes, attendees: Number(d.attendees) };
       const r = mode === "class"
-        ? await submitClassBooking({ ...base, sessionId })
-        : await submitRentalBooking({ ...base, slots: slotInput ? [slotInput] : [], activity: d.activity, roomId, category: d.category });
+        ? await submitClassBooking({ ...base, sessionId, agreed: agree })
+        : await submitRentalBooking({ ...base, slots: slotInput ? [slotInput] : [], activity: d.activity, roomId, category: d.category, agreed: agree });
       if (r.ok) { setDone(r); requestAnimationFrame(() => heading.current?.focus()); return; }
       setFormError(r.error);
       if (r.fields) { setErrors(r.fields); goStep(r.fields.slot || r.fields.session || r.fields.room ? 0 : 1); }
@@ -298,7 +322,7 @@ export function BookingFlow(p: {
                       {r.image ? <div className="relative aspect-[16/9]"><Image src={r.image} alt={r.imageAlt || r.name} fill sizes="(min-width:640px) 40vw, 90vw" className="object-cover" /></div> : null}
                       <span className="block p-5">
                         <span className="display block text-2xl">{r.name}</span>
-                        <span className="mt-1 block text-sm text-ink/70">{[r.sizeSqFt ? `${r.sizeSqFt} sq ft` : null, `up to ${r.capacity} people`].filter(Boolean).join(" · ")}</span>
+                        <span className="mt-1 block text-sm text-ink/70">{[r.sizeSqFt ? `${r.sizeSqFt} sq ft` : null, `up to ${r.capacity} people`, r.minHours > 1 ? `minimum ${r.minHours} hours` : null].filter(Boolean).join(" · ")}</span>
                         <span className="mt-2 block font-semibold text-plum">{money(r.priceCents)} / hour{r.priceNote ? <span className="ml-2 text-xs font-normal text-ink/60">{r.priceNote}</span> : null}</span>
                       </span>
                     </label>
@@ -415,7 +439,7 @@ export function BookingFlow(p: {
               </div>
               {p.terms || p.cancellation || p.taxNote ? (
                 <details className="rounded-2xl border border-plum/20 p-5">
-                  <summary className="cursor-pointer font-semibold text-plum">Booking terms</summary>
+                  <summary className="cursor-pointer font-semibold text-plum">Booking terms and cancellation</summary>
                   <div className="mt-3 space-y-3 text-sm text-ink/80">
                     {p.terms ? <p className="whitespace-pre-line">{p.terms}</p> : null}
                     {p.cancellation ? <p className="whitespace-pre-line">{p.cancellation}</p> : null}
@@ -423,7 +447,20 @@ export function BookingFlow(p: {
                   </div>
                 </details>
               ) : null}
-              <label className="flex min-h-11 items-start gap-3"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1 h-5 w-5 accent-[#c9a961]" /><span>I have read the terms and understand this is a request until the studio confirms my payment.</span></label>
+              <div>
+                <p className="mb-2 text-sm font-semibold text-plum">Booking Agreement &amp; Liability Waiver</p>
+                <div
+                  ref={waiverBox} onScroll={checkScrolled} tabIndex={0} role="region" aria-label="Booking Agreement and Liability Waiver. Scroll to the end to enable the I Agree box."
+                  className="max-h-72 overflow-y-auto rounded-2xl border border-plum/25 bg-white p-5 text-sm leading-relaxed text-ink/85 whitespace-pre-line focus-visible:outline"
+                >
+                  {p.waiver}
+                </div>
+                <p className="mt-2 text-xs text-ink/60" aria-live="polite">{readAll ? "Thank you. You can now tick I AGREE." : "Scroll to the end of the agreement to enable the I AGREE box."}</p>
+                <label className={cn("mt-3 flex min-h-11 items-start gap-3", !readAll && "opacity-50")}>
+                  <input type="checkbox" checked={agree} disabled={!readAll} onChange={(e) => setAgree(e.target.checked)} className="mt-1 h-5 w-5 accent-[#c9a961]" />
+                  <span className="font-semibold">I AGREE to the Booking Agreement &amp; Liability Waiver, and I understand this is a request until the studio confirms my payment.</span>
+                </label>
+              </div>
               {!p.emailOn ? <p className="text-sm text-ink/60">Email is not set up on this site yet, so no confirmation email will be sent. Your reference will be shown on screen.</p> : null}
             </div>
           ) : null}

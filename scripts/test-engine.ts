@@ -23,17 +23,17 @@ async function main() {
 
   // 1. Class capacity under concurrent submissions
   const ses = (await (await col("sessions")).find({ status: "published" }).sort({ starts_at: 1 }).limit(1).toArray())[0];
-  const results = await Promise.all(Array.from({ length: 12 }, (_, i) => createClassBooking(cust(i), ses.id, 1)));
+  const results = await Promise.all(Array.from({ length: 12 }, (_, i) => createClassBooking(cust(i), ses.id, 1, true)));
   const okN = results.filter((r) => r.ok).length;
   check("class: 12 parallel single-seat requests never exceed capacity", okN === ses.capacity, `accepted=${okN} capacity=${ses.capacity}`);
-  check("class: full class rejects", !(await createClassBooking(cust(99), ses.id, 1)).ok);
+  check("class: full class rejects", !(await createClassBooking(cust(99), ses.id, 1, true)).ok);
 
   // 2. Slot grid + one shared calendar per room
   const date = addDays(dateStrIn(new Date(), DEFAULT_SETTINGS.booking.timezone), 5);
   const g1 = await daySlots(main.id, date);
   check("slot grid lists hourly slots", g1.slots.length >= 8 && g1.slots.some((s) => s.state === "free"), `${g1.slots.length} slots`);
   const start = free(g1)[2];
-  const par = await Promise.all(Array.from({ length: 6 }, (_, i) => createRentalBooking(cust(i), [{ date, start, minutes: 120 }], 4, "Dance rehearsal", main.id, "Rehearsal")));
+  const par = await Promise.all(Array.from({ length: 6 }, (_, i) => createRentalBooking(cust(i), [{ date, start, minutes: 120 }], 4, "Dance rehearsal", main.id, "Rehearsal", true)));
   check("rental: 6 parallel identical requests -> exactly 1 accepted", par.filter((r) => r.ok).length === 1);
   const g2 = await daySlots(main.id, date);
   const idx = g2.slots.findIndex((s) => s.start === start);
@@ -41,16 +41,18 @@ async function main() {
   check("the hour right after the booking is still free (no buffers)", g2.slots[idx + 2].state === "free");
   const gp = await daySlots(priv.id, date);
   check("private studio is unaffected by a main studio booking", gp.slots[idx].state === "free");
-  const privOk = await createRentalBooking(cust(70), [{ date, start, minutes: 60 }], 2, "Solo practice", priv.id, "Rehearsal");
-  check("same hour can be booked in the private studio", privOk.ok);
-  const dup = await createRentalBooking(cust(71), [{ date, start, minutes: 60 }], 2, "Overlap", main.id, "Other");
+  check("private studio: 1 hour is below its 2 hour minimum", !(await createRentalBooking(cust(69), [{ date, start, minutes: 60 }], 2, "Too short", priv.id, "Rehearsal", true)).ok);
+  const privOk = await createRentalBooking(cust(70), [{ date, start, minutes: 120 }], 2, "Solo practice", priv.id, "Rehearsal", true);
+  check("same hours can be booked in the private studio (2h)", privOk.ok);
+  check("booking without accepting the agreement is refused", !(await createRentalBooking(cust(68), [{ date, start: free(g2)[0], minutes: 60 }], 2, "No waiver", main.id, "Other", false as any)).ok);
+  const dup = await createRentalBooking(cust(71), [{ date, start, minutes: 60 }], 2, "Overlap", main.id, "Other", true);
   check("same hour in the main studio is refused", !dup.ok);
-  check("capacity per room enforced", !(await createRentalBooking(cust(72), [{ date, start: free(g2)[0], minutes: 60 }], 99, "Too many", priv.id, "Other")).ok);
+  check("capacity per room enforced (private max 6)", !(await createRentalBooking(cust(72), [{ date, start: free(g2)[0], minutes: 120 }], 7, "Too many", priv.id, "Other", true)).ok);
 
   // 3. Pricing: room rate, no stacking, floor, promo
   const first = par.find((r) => r.ok) as any;
   check("price: 2h x $25 main studio rate computed on server", first?.subtotalCents === 5000, `subtotal=${first?.subtotalCents}`);
-  check("price: private studio $15/h", privOk.ok && (privOk as any).subtotalCents === 1500);
+  check("price: private studio $15/h x 2h = $30", privOk.ok && (privOk as any).subtotalCents === 3000);
 
   const offers: OfferRow[] = [
     { id: "a", slug: "a", title: "Regular", description: "", kind: "percent_off", params: { percent: 50, minSessions: 6 }, active: true, limit_count: null, starts_on: null, ends_on: null, show_on_home: false, sort_order: 0 },
@@ -73,7 +75,7 @@ async function main() {
   const id = first.id as string;
   check("status: pending -> confirmed", (await setBookingStatus(id, "confirmed")).ok);
   check("status: confirmed cannot be declined", !(await setBookingStatus(id, "declined")).ok);
-  const other = await createRentalBooking(cust(50), [{ date, start: free(g2)[free(g2).length - 1], minutes: 60 }], 2, "Workshop", main.id, "Workshops");
+  const other = await createRentalBooking(cust(50), [{ date, start: free(g2)[free(g2).length - 1], minutes: 60 }], 2, "Workshop", main.id, "Workshops", true);
   check("rental: another free hour accepted", other.ok);
   if (other.ok) check("reschedule: onto an occupied time rejected", !(await rescheduleRental(other.id, [{ date, start, minutes: 60 }])).ok);
   await setBookingStatus(id, "cancelled");

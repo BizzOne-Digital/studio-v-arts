@@ -2,6 +2,7 @@ import { col, ensureIndexes, insert, nextSort } from "../src/lib/db";
 import { DEFAULT_SETTINGS } from "../src/lib/settings";
 import { slugify } from "../src/lib/format";
 import { applyV2 } from "./v2";
+import { applyV3 } from "./v3";
 import { addDays, dateStrIn, zonedToUtc } from "../src/lib/time";
 
 const demo = process.argv.includes("--demo");
@@ -73,6 +74,7 @@ async function main() {
   }
 
   await applyV2();
+  await applyV3();
 
   if (demo) {
     console.log("Applying DEMO data. Do not use in production.");
