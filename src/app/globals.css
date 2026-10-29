@@ -79,7 +79,6 @@ body {
 /* Marquee */
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .marquee-track { animation: marquee 38s linear infinite; width: max-content; }
-.marquee[data-paused="true"] .marquee-track { animation-play-state: paused; }
 @keyframes spin-slow { to { transform: rotate(360deg); } }
 .spin-slow { animation: spin-slow 28s linear infinite; }
 @keyframes float-y { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-14px) } }

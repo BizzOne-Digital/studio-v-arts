@@ -11,7 +11,7 @@ import { Magnetic } from "./motion";
 /** The STUDIO VM logo. Dark artwork by default, ivory artwork (`light`) for dark backgrounds; an admin-uploaded logo overrides both. */
 export function Wordmark({ logoSrc, name, light, id, className }: { logoSrc?: string | null; name: string; light?: boolean; id?: string; className?: string }) {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img id={id} src={logoSrc || (light ? "/logo-light.webp" : "/logo.webp")} alt={name} width={1000} height={459} className={cn("h-12 w-auto", className)} />;
+  return <img id={id} src={logoSrc || (light ? "/logo-light.webp" : "/logo.webp")} alt={name} width={1000} height={459} className={cn("h-[4.2rem] w-auto", className)} />;
 }
 
 export function Header({ logoSrc, name, instagram }: { logoSrc: string | null; name: string; instagram?: string | null }) {

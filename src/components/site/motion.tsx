@@ -139,20 +139,19 @@ export function Tilt({ children, className, max = 7 }: { children: ReactNode; cl
   );
 }
 
-/** Slow typographic marquee with a visible pause control. */
+/** Slow typographic marquee. */
 export function Marquee({ items, className }: { items: string[]; className?: string }) {
-  const [paused, setPaused] = useState(false);
   const row = [...items, ...items];
   return (
-    <div className={cn("marquee relative flex items-center gap-4 overflow-hidden", className)} data-paused={paused}>
+    <div className={cn("marquee relative flex items-center gap-4 overflow-hidden", className)}>
       <div className="min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]">
-        <div className="marquee-track flex gap-10 whitespace-nowrap" aria-hidden>
+        <div className="marquee-track flex gap-8 whitespace-nowrap" aria-hidden>
           {[0, 1].map((k) => (
-            <div key={k} className="flex gap-10">
+            <div key={k} className="flex gap-8">
               {items.map((t, i) => (
-                <span key={`${k}-${i}`} className="display text-5xl sm:text-7xl flex items-center gap-10">
+                <span key={`${k}-${i}`} className="display text-2xl sm:text-4xl flex items-center gap-8">
                   {t}
-                  <span className="inline-block h-3 w-3 rounded-full bg-champagne" />
+                  <span className="inline-block h-2 w-2 rounded-full bg-champagne" />
                 </span>
               ))}
             </div>
@@ -160,15 +159,6 @@ export function Marquee({ items, className }: { items: string[]; className?: str
         </div>
         <p className="sr-only">{row.slice(0, items.length).join(", ")}</p>
       </div>
-      <button
-        type="button"
-        onClick={() => setPaused((p) => !p)}
-        aria-pressed={paused}
-        className="shrink-0 mr-4 grid h-11 w-11 place-items-center rounded-full border border-current/30 text-sm hover:bg-white/10"
-        aria-label={paused ? "Play scrolling text" : "Pause scrolling text"}
-      >
-        <span aria-hidden>{paused ? "▶" : "❚❚"}</span>
-      </button>
     </div>
   );
 }

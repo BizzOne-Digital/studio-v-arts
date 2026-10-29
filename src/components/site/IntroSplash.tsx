@@ -26,7 +26,7 @@ export function IntroSplash({ name, logoSrc }: { name: string; logoSrc: string |
     }
     const fit = requestAnimationFrame(() => {
       const natural = document.getElementById("splash-logo")?.offsetWidth || 280;
-      setBase(Math.min(2.4, (window.innerWidth - 48) / natural));
+      setBase(Math.min(560 / natural, (window.innerWidth - 48) / natural));
     });
     let t1: ReturnType<typeof setTimeout>;
     const go = () => {
