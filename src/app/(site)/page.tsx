@@ -37,7 +37,7 @@ export default async function Home() {
   return (
     <>
       <OrgJsonLd s={s} />
-      <Hero heroSub={s.copy.heroSub} />
+      <Hero />
 
       <section aria-label="What happens at Studio VM" className="on-dark grain relative overflow-hidden bg-plum py-8 text-ivory">
         <Marquee items={["Dance", "Yoga", "Painting", "Chess", "Zumba", "Workshops", "Celebrations", "Community"]} />

@@ -38,6 +38,7 @@ body {
 .f-head { font-family: var(--font-playfair), Georgia, serif; letter-spacing: -0.03em; }
 .display-i { font-style: italic; }
 .hand { font-family: var(--font-hand); }
+.eyebrow::before { content: "\2726"; margin-right: .7em; color: var(--color-champagne); letter-spacing: 0; }
 .eyebrow { font-family: var(--font-cormorant), Georgia, serif; font-size: 0.95rem; letter-spacing: 0.3em; text-transform: uppercase; font-weight: 600; color: var(--color-mauve-deep); }
 
 /* Focus: always visible, never colour-only */
@@ -58,9 +59,9 @@ body {
 .btn::before { content: ""; position: absolute; inset: 0; z-index: -1; transform: translateY(101%); border-radius: 50% 50% 0 0 / 100% 100% 0 0; transition: transform .5s var(--ease-out-expo), border-radius .5s; }
 .btn:hover::before, .btn:focus-visible::before { transform: translateY(0); border-radius: 0; }
 .btn:active { transform: scale(.97); }
-.btn-primary { background: #15120e; color: var(--color-ivory); }
-.btn-primary::before { background: var(--color-mauve-deep); }
-.btn-primary:hover { box-shadow: 0 14px 34px -12px rgba(21,18,14,.55); }
+.btn-primary { background: linear-gradient(135deg, #b8923a 0%, #e9d38e 48%, #c9a961 100%); color: #15120e; box-shadow: 0 10px 28px -14px rgba(184,146,58,.9); }
+.btn-primary::before { background: #15120e; }
+.btn-primary:hover, .btn-primary:focus-visible { color: #f1dc9a; box-shadow: 0 16px 34px -14px rgba(21,18,14,.6); }
 .btn-ghost { border: 1.5px solid var(--color-plum); color: var(--color-plum); background: transparent; }
 .btn-ghost::before { background: var(--color-plum); }
 .btn-ghost:hover, .btn-ghost:focus-visible { color: var(--color-ivory); }

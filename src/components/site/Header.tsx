@@ -6,21 +6,12 @@ import { useEffect, useRef, useState } from "react";
 import { MOBILE_MENU, PAGES, PRIMARY } from "@/lib/nav";
 import { InstagramCta } from "./Instagram";
 import { cn } from "@/lib/cn";
-import { BRAND_CAPTION, BRAND_FULL } from "@/lib/brand";
 import { Magnetic } from "./motion";
 
-export function Wordmark({ logoSrc, name, light, id }: { logoSrc?: string | null; name: string; light?: boolean; id?: string }) {
-  if (logoSrc) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img id={id} src={logoSrc} alt={name} className="h-12 w-auto" />;
-  }
-  // Full-name lockup: script "Studio VM" with the legal name beneath it.
-  return (
-    <span id={id} role="img" aria-label={BRAND_FULL} className={cn("inline-flex flex-col items-start whitespace-nowrap leading-none", light ? "text-[#e6cf8b]" : "text-[#15120e]")}>
-      <span aria-hidden className="f-script block pr-3 pt-1 text-[2.9rem] leading-[1.1]">Studio VM</span>
-      <span aria-hidden className="f-serif -mt-1.5 block text-[0.5rem] font-semibold uppercase tracking-[0.18em] opacity-90">{BRAND_CAPTION}</span>
-    </span>
-  );
+/** The STUDIO VM logo. Dark artwork by default, ivory artwork (`light`) for dark backgrounds; an admin-uploaded logo overrides both. */
+export function Wordmark({ logoSrc, name, light, id, className }: { logoSrc?: string | null; name: string; light?: boolean; id?: string; className?: string }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img id={id} src={logoSrc || (light ? "/logo-light.webp" : "/logo.webp")} alt={name} width={1000} height={459} className={cn("h-12 w-auto", className)} />;
 }
 
 export function Header({ logoSrc, name, instagram }: { logoSrc: string | null; name: string; instagram?: string | null }) {
@@ -51,8 +42,8 @@ export function Header({ logoSrc, name, instagram }: { logoSrc: string | null; n
   const primary = PAGES.filter((p) => PRIMARY.includes(p.href));
   return (
     <>
-      <header className={cn("fixed inset-x-0 top-0 z-50 transition-all duration-500", open ? "border-b border-transparent py-3" : scrolled ? "bg-white/90 backdrop-blur-md border-b border-[#15120e]/15 py-2.5" : "border-b border-[#15120e]/25 py-3")}>
-        <div className="flex w-full items-center justify-between px-5 sm:px-12 lg:px-[5.2rem]">
+      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6">
+        <div className={cn("mx-auto flex max-w-[92rem] items-center justify-between rounded-[1.4rem] border px-4 py-1.5 transition-all duration-500 sm:px-7", open ? "border-transparent bg-transparent" : scrolled ? "border-black/5 bg-white/85 shadow-[0_14px_44px_-22px_rgba(21,18,14,.45)] backdrop-blur-xl" : "border-white/60 bg-white/55 shadow-[0_10px_40px_-24px_rgba(21,18,14,.4)] backdrop-blur-md")}>
           <Link href="/" aria-label={`${name} home`} className="rounded-full">
             <Wordmark id="site-logo" logoSrc={logoSrc} name={name} light={open} />
           </Link>
@@ -69,7 +60,7 @@ export function Header({ logoSrc, name, instagram }: { logoSrc: string | null; n
           </nav>
           <div className="flex items-center gap-3">
             <span className="hidden sm:inline-block"><Magnetic>
-              <Link href="/booking" className="btn f-serif group !gap-3 !bg-[#15120e] !px-7 !text-[1.1rem] !text-white">Book Your Vibe<svg aria-hidden width="20" height="12" viewBox="0 0 22 14" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M0 7h20M14 1l6 6-6 6" /></svg></Link>
+              <Link href="/booking" className="btn btn-primary f-serif group !gap-3 !px-7 !text-[1.1rem]">Book Your Vibe<svg aria-hidden width="20" height="12" viewBox="0 0 22 14" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M0 7h20M14 1l6 6-6 6" /></svg></Link>
             </Magnetic></span>
             <span className={cn("hidden min-[480px]:inline sm:hidden", open && "invisible")}><Link href="/booking" className="btn btn-primary !min-h-11 !px-4 !py-2 text-sm whitespace-nowrap">Book Your Vibe</Link></span>
             <button

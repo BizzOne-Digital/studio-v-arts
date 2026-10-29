@@ -15,7 +15,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   return (
     <ClientMotion>
       <a href="#main" className="skip">Skip to content</a>
-      <IntroSplash name={s.business.name} logoSrc={logo} tagline={s.business.tagline} />
+      <IntroSplash name={s.business.name} logoSrc={logo} />
       <ScrollProgress />
       <Header logoSrc={logo} name={s.business.shortName} instagram={s.social.instagram || null} />
       <main id="main" className="relative">{children}</main>
