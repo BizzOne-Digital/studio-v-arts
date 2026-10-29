@@ -31,6 +31,7 @@ export default async function Team() {
                 <h2 className="display mt-6 text-4xl">{m.name}</h2>
                 {m.role ? <p className="eyebrow mt-2">{m.role}</p> : null}
                 {m.bio ? <p className="mt-4 whitespace-pre-line text-ink/80">{m.bio}</p> : null}
+                {m.classes.length ? <p className="mt-4 text-sm"><span className="font-semibold text-plum">Teaches:</span> {m.classes.join(", ")}</p> : null}
               </Reveal>
             ))}
           </ul>

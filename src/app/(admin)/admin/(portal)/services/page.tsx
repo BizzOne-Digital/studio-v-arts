@@ -9,10 +9,12 @@ export const metadata = { title: "Services" };
 
 export default async function Services({ searchParams }: { searchParams: Promise<{ edit?: string; show?: string }> }) {
   const sp = await searchParams;
-  const [svcRows, up] = await Promise.all([
+  const [svcRows, up, teamRows] = await Promise.all([
     (await col("services")).find({}).sort({ sort_order: 1, created_at: 1 }).toArray(),
     (await col("sessions")).aggregate([{ $match: { status: "published", starts_at: { $gt: new Date() } } }, { $group: { _id: "$service_id", n: { $sum: 1 } } }]).toArray(),
+    (await col("team_members")).find({}).sort({ sort_order: 1 }).project({ name: 1 }).toArray(),
   ]);
+  const teamNames = teamRows.map((m) => m.name as string);
   const upMap = new Map(up.map((u) => [u._id as string, u.n as number]));
   const rows = svcRows.map((r) => ({ ...r, upcoming: upMap.get(r.id) ?? 0 }));
   const show = sp.show === "archived" ? "archived" : "active";
@@ -37,7 +39,7 @@ export default async function Services({ searchParams }: { searchParams: Promise
             <Field label="Duration (minutes)"><input name="duration" type="number" min={1} defaultValue={x?.duration_minutes ?? ""} className="admin-input" /></Field>
             <Field label="Price per person (CAD)" hint="Empty = no online price. Classes need a price (here or per session) to be bookable."><input name="price" inputMode="decimal" defaultValue={x?.price_cents != null ? x.price_cents / 100 : ""} className="admin-input" /></Field>
             <Field label="Price note (shown instead of a price)"><input name="priceNote" defaultValue={x?.price_note} className="admin-input" /></Field>
-            <Field label="Instructor"><input name="instructor" defaultValue={x?.instructor} className="admin-input" /></Field>
+            <Field label="Instructor" hint="Pick from your Team list, or type a guest instructor."><input name="instructor" list="team-names" autoComplete="off" defaultValue={x?.instructor} className="admin-input" /><datalist id="team-names">{teamNames.map((n) => <option key={n} value={n} />)}</datalist></Field>
             <Field label="Capacity"><input name="capacity" type="number" min={1} defaultValue={x?.capacity ?? ""} className="admin-input" /></Field>
             <Field label="Status"><select name="status" defaultValue={x?.status ?? "draft"} className="admin-input"><option value="draft">Draft (hidden)</option><option value="published">Published</option><option value="archived">Archived</option></select></Field>
             <ImageField name="image_url" folder="services" current={x?.image_url || mediaSrc(x?.image_id)} />

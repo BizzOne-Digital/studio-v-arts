@@ -41,7 +41,7 @@ export function Hero() {
         {/* text */}
         <div className="relative z-10 order-1 px-6 pb-8 pt-6 sm:px-12 lg:absolute lg:inset-y-0 lg:left-0 lg:w-[40%] lg:px-0 lg:pb-0 lg:pl-[8%] lg:pt-[1.2%]">
           <motion.div {...fade(0.2)}>
-            <Image src="/logo.webp" alt="Studio VM. Vibe. Move. Repeat." width={1000} height={459} priority className="h-auto w-[11rem] lg:w-[min(17vw,22rem)]" />
+            <Image src="/logo.webp" alt="Studio VM. Vibe. Move. Repeat." width={1000} height={438} priority className="h-auto w-[11rem] lg:w-[min(17vw,22rem)]" />
           </motion.div>
 
           <h1 className="f-head mt-5 text-[clamp(2.6rem,11vw,4.4rem)] leading-[0.95] text-[#15120e] lg:mt-[3%] lg:text-[min(4.55vw,6rem)] lg:leading-[0.98]" aria-label="Your space. Your passion. Your vibe.">

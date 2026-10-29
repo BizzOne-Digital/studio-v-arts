@@ -17,13 +17,15 @@ export default async function Schedule({ searchParams }: { searchParams: Promise
   const b = s.booking;
   const tz = b.timezone;
   const month = /^\d{4}-\d{2}$/.test(sp.month ?? "") ? sp.month! : dateStrIn(new Date(), tz).slice(0, 7);
-  const [events, svcRows, sessRows, blockedRows, booked] = await Promise.all([
+  const [events, svcRows, sessRows, blockedRows, booked, teamRows] = await Promise.all([
     loadMonthEvents(month, tz),
     (await col("services")).find({ booking_type: "class", status: { $ne: "archived" } }).sort({ title: 1 }).toArray(),
     (await col("sessions")).find({ starts_at: { $gt: yesterday() } }).sort({ starts_at: 1 }).limit(100).toArray(),
     (await col("blocked_dates")).find({}).sort({ date_start: 1 }).toArray(),
     (await col("bookings")).aggregate([{ $match: { session_id: { $ne: null }, status: { $in: ["pending", "confirmed", "completed"] } } }, { $group: { _id: "$session_id", n: { $sum: "$attendees" } } }]).toArray(),
+    (await col("team_members")).find({}).sort({ sort_order: 1 }).project({ name: 1 }).toArray(),
   ]);
+  const teamNames = teamRows.map((m) => m.name as string);
   const titles = new Map(svcRows.map((v) => [v.id as string, v.title as string]));
   const bookedMap = new Map(booked.map((x) => [x._id as string, x.n as number]));
   const services = { rows: svcRows };
@@ -41,7 +43,7 @@ export default async function Schedule({ searchParams }: { searchParams: Promise
         <Field label="Length (minutes)"><input type="number" name="minutes" required min={15} step={5} defaultValue={x ? Math.round((new Date(x.ends_at).getTime() - new Date(x.starts_at).getTime()) / 60000) : 60} className="admin-input" /></Field>
         <Field label="Capacity (seats)"><input type="number" name="capacity" required min={1} defaultValue={x?.capacity ?? ""} className="admin-input" /></Field>
         <Field label="Price per person (CAD)" hint="Leave empty to use the service price. A session with no price at all cannot be booked online."><input name="price" inputMode="decimal" defaultValue={x?.price_cents != null ? x.price_cents / 100 : ""} className="admin-input" /></Field>
-        <Field label="Instructor"><input name="instructor" defaultValue={x?.instructor} className="admin-input" /></Field>
+        <Field label="Instructor" hint="Pick from your Team list, or type a guest instructor. Leave empty to use the class's instructor."><input name="instructor" list="team-names" autoComplete="off" defaultValue={x?.instructor} className="admin-input" /><datalist id="team-names">{teamNames.map((n) => <option key={n} value={n} />)}</datalist></Field>
         <Field label="Status"><select name="status" defaultValue={x?.status ?? "draft"} className="admin-input"><option value="draft">Draft (hidden)</option><option value="published">Published</option></select></Field>
         <Field label="Internal notes" wide><input name="notes" defaultValue={x?.notes} className="admin-input" /></Field>
       </div>

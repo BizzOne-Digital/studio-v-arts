@@ -70,9 +70,22 @@ async function loadFaqs(homeOnly = false) {
 }
 
 async function loadTeam() {
-  const rows = await (await col("team_members")).find({ status: "published" }).sort({ sort_order: 1, created_at: 1 }).toArray();
+  const [rows, svc, sess] = await Promise.all([
+    (await col("team_members")).find({ status: "published" }).sort({ sort_order: 1, created_at: 1 }).toArray(),
+    (await col("services")).find({ status: "published", booking_type: "class" }).project({ title: 1, instructor: 1 }).toArray(),
+    (await col("sessions")).find({ status: "published", starts_at: { $gt: new Date() }, instructor: { $ne: "" } }).project({ service_id: 1, instructor: 1 }).toArray(),
+  ]);
+  const key = (v: unknown) => String(v ?? "").trim().toLowerCase();
+  const titleOf = new Map(svc.map((v) => [v.id as string, v.title as string]));
+  // classes each instructor teaches: the class's default instructor plus any upcoming session they are set on
+  const taught = (name: string) => {
+    const set = new Set<string>();
+    for (const v of svc) if (key(v.instructor) === key(name)) set.add(v.title as string);
+    for (const x of sess) if (key(x.instructor) === key(name) && titleOf.has(x.service_id)) set.add(titleOf.get(x.service_id)!);
+    return [...set];
+  };
   return rows.map((r) => ({
-    id: r.id as string, name: r.name as string, role: r.role as string, bio: r.bio as string,
+    id: r.id as string, name: r.name as string, role: r.role as string, bio: r.bio as string, classes: taught(r.name as string),
     image: r.image_url || mediaSrc(r.image_id), imageAlt: (r.image_alt || r.name) as string,
   }));
 }
