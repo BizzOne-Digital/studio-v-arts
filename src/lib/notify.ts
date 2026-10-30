@@ -39,7 +39,9 @@ function layout(title: string, rows: [string, string][], blocks: string[]) {
 <h2 style="margin:0 0 16px;font-size:20px">${esc(title)}</h2>
 <table style="width:100%;border-collapse:collapse;font-size:14px">${rows.map(([k, v]) => `<tr><td style="padding:7px 0;color:#6b665c;width:34%;vertical-align:top">${esc(k)}</td><td style="padding:7px 0;white-space:pre-line">${esc(v)}</td></tr>`).join("")}</table>
 ${blocks.join("")}
-</div></div></body></html>`;
+</div>
+<p style="text-align:center;font-size:12px;color:#8a8478;margin:14px 0 0">${esc(BRAND_FULL)}<br>You are receiving this email because of a booking or message made on our website.</p>
+</div></body></html>`;
 }
 
 type D = NonNullable<Awaited<ReturnType<typeof describe>>>;
@@ -75,8 +77,9 @@ export async function notifyNewBooking(id: string): Promise<{ customerEmailed: b
     `New booking request ${b.reference}: ${d.what}`,
     `${b.customer_name} <${b.customer_email}>, ${b.customer_phone}\n${d.what}\n${d.when}\nPeople: ${b.attendees}\nReason: ${b.activity || "-"}\nTotal: ${money(b.total_cents)} CAD\nNotes: ${b.customer_notes || "-"}\n\nOpen the admin panel to confirm once the Interac e-transfer arrives.`,
     layout("New booking request", [...summaryRows(d), ["Customer", `${b.customer_name}\n${b.customer_email}\n${b.customer_phone}`], ["Reason", b.activity || "-"], ["Notes", b.customer_notes || "-"]], [
-      `<p style="font-size:13px;color:#6b665c;margin-top:16px">Confirm it in the admin panel once the Interac e-transfer arrives.</p>`,
+      `<p style="font-size:13px;color:#6b665c;margin-top:16px">Confirm it in the admin panel once the Interac e-transfer arrives. Reply to this email to write to the customer.</p>`,
     ]),
+    { replyTo: b.customer_email },
   );
   return { customerEmailed };
 }
@@ -112,6 +115,8 @@ export async function notifyContact(m: { name: string; email: string; phone: str
     await studioInbox(),
     `Website message: ${m.subject || "General enquiry"}`,
     `From: ${m.name} <${m.email}> ${m.phone}\n\n${m.message}`,
+    undefined,
+    { replyTo: m.email },
   );
   await sendMail(m.email, "We received your message", `Hello ${m.name},\n\nThank you for contacting ${s.business.shortName}. We have your message and will reply as soon as we can.\n\n${BRAND_FULL}`);
   return ok;
