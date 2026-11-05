@@ -48,11 +48,7 @@ export function Hero() {
       <div className="flex flex-col lg:relative lg:block lg:aspect-[1918/820]">
         {/* text sits inside the arch on the left of the photograph */}
         <div className="relative z-10 order-1 px-6 pb-8 pt-6 sm:px-12 lg:absolute lg:inset-y-0 lg:left-[4.8%] lg:flex lg:w-[25%] lg:flex-col lg:justify-center lg:px-0 lg:pb-0 lg:pt-[1%]">
-          <motion.div {...fade(0.2)}>
-            <Image src="/logo.webp" alt="Studio VM. Vibe. Move. Repeat." width={1000} height={438} priority className="h-auto w-[11rem] lg:w-[min(16vw,21rem)]" />
-          </motion.div>
-
-          <h1 className="f-head mt-5 text-[clamp(2.6rem,11vw,4.4rem)] leading-[0.98] text-[#15120e] lg:mt-[4%] lg:text-[min(3.95vw,5.4rem)] lg:leading-[0.98]" aria-label="Your space. Your passion. Your vibe.">
+          <h1 className="f-head text-[clamp(2.6rem,11vw,4.4rem)] leading-[0.98] text-[#15120e] lg:text-[min(3.95vw,5.4rem)] lg:leading-[0.98]" aria-label="Your space. Your passion. Your vibe.">
             <Line ready={ready} delay={0.3}>Your space.</Line>
             <Line ready={ready} delay={0.45}>Your passion.</Line>
             <Line ready={ready} delay={0.6} className="gold-text pr-4 italic">Your vibe.</Line>
