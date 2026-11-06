@@ -114,3 +114,10 @@ html[data-splash="on"] #site-logo { opacity: 0; animation: logo-failsafe .01s 6s
 
 /* Metallic gold for key accents */
 .gold-text { background: linear-gradient(100deg, #a8832f 0%, #f1dc9a 38%, #c9a961 55%, #f6e7b4 75%, #a8832f 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* Floating "we are hiring" button: a soft blink and an expanding ring to draw the eye, off for reduced motion */
+@keyframes hiring-blink { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+@keyframes hiring-ring { 0% { box-shadow: 0 0 0 0 rgba(212,182,106,.7), 0 14px 34px -10px rgba(0,0,0,.55); } 70%, 100% { box-shadow: 0 0 0 16px rgba(212,182,106,0), 0 14px 34px -10px rgba(0,0,0,.55); } }
+.hiring-fab { animation: hiring-ring 2.2s ease-out infinite; }
+.hiring-fab .hiring-dot { animation: hiring-blink 1.1s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .hiring-fab, .hiring-fab .hiring-dot { animation: none; } }

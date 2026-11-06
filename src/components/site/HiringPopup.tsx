@@ -8,15 +8,19 @@ const KEY = "sv-hiring";
 
 /**
  * "Instructors wanted" announcement. Opens once per visit: after the intro splash on a first visit, or shortly after load
- * otherwise. Closes with the button, the Escape key or a click outside, and does not come back until the next visit.
+ * otherwise. Closing it (button, Escape or a click outside) does not remove it: it shrinks to a blinking "We are hiring"
+ * button at the bottom right of every page, and a click on that button opens it again.
  */
 export function HiringPopup({ phone, email }: { phone: string; email: string }) {
   const [open, setOpen] = useState(false);
+  const [mini, setMini] = useState(false); // closed, shown as the floating button
   const closeRef = useRef<HTMLButtonElement>(null);
   const tel = phone.replace(/[^\d+]/g, "");
 
   useEffect(() => {
-    try { if (sessionStorage.getItem(KEY)) return; } catch {}
+    try {
+      if (sessionStorage.getItem(KEY)) { const id = requestAnimationFrame(() => setMini(true)); return () => cancelAnimationFrame(id); }
+    } catch {}
     let t: ReturnType<typeof setTimeout> | undefined;
     const show = () => { t = setTimeout(() => setOpen(true), 700); };
     if (document.documentElement.dataset.splash === "on") window.addEventListener("splash-done", show, { once: true });
@@ -24,20 +28,33 @@ export function HiringPopup({ phone, email }: { phone: string; email: string }) 
     return () => { clearTimeout(t); window.removeEventListener("splash-done", show); };
   }, []);
 
-  const close = () => { setOpen(false); try { sessionStorage.setItem(KEY, "1"); } catch {} };
+  const close = () => { setOpen(false); setMini(true); try { sessionStorage.setItem(KEY, "1"); } catch {} };
 
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); try { sessionStorage.setItem(KEY, "1"); } catch {} } };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); setMini(true); try { sessionStorage.setItem(KEY, "1"); } catch {} } };
     window.addEventListener("keydown", onKey);
     closeRef.current?.focus();
     return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); };
   }, [open]);
 
   return (
-    <AnimatePresence>
+    <>
+      <AnimatePresence>
+        {mini && !open && (
+          <motion.button
+            type="button" onClick={() => setOpen(true)} aria-label="Instructors wanted. Open details"
+            className="hiring-fab fixed bottom-4 right-4 z-[80] inline-flex min-h-12 items-center gap-2.5 rounded-full bg-[linear-gradient(135deg,#b8923a_0%,#e9d38e_48%,#c9a961_100%)] px-5 text-[0.92rem] font-semibold text-[#15120e] shadow-[0_14px_34px_-10px_rgba(0,0,0,.55)] sm:bottom-6 sm:right-6"
+            initial={{ opacity: 0, y: 24, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 16, scale: 0.9 }} transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <span aria-hidden className="hiring-dot relative grid h-2.5 w-2.5 place-items-center"><span className="absolute inline-block h-2.5 w-2.5 rounded-full bg-[#15120e]" /></span>
+            <span>We are hiring <span className="hidden sm:inline">dance instructors</span></span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
       {open && (
         <motion.div
           className="fixed inset-0 z-[90] grid place-items-center overflow-y-auto bg-[#0d0b09]/70 p-4 backdrop-blur-sm"
@@ -81,6 +98,7 @@ export function HiringPopup({ phone, email }: { phone: string; email: string }) 
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </>
   );
 }
